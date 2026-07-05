@@ -1,0 +1,42 @@
+# Secrets and local agent config (never commit)
+.env
+.env.*
+!.env.example
+CLAUDE.md
+AGENTS.md
+.claude/
+
+# Local workflow artifacts (not part of the submission)
+state.md
+docs/superpowers/
+docs/drafts/
+.superpowers/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# Local data: sqlite db and generated audio.
+# Ignore directory *contents* but keep the folder tracked via .gitkeep.
+# (Ignoring `data/` itself would stop `!data/.gitkeep` from re-including the file.)
+data/*
+!data/.gitkeep
+# The showcase sample at repo root is committed deliberately.
+*.mp3
+!sample.mp3
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
