@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Google News Search Results for AI</title>
+    <link>https://news.google.com/</link>
+    <description>News search results</description>
+    <language>en-us</language>
+    <item>
+      <title>OpenAI Releases New Language Model with Improved Reasoning</title>
+      <link>https://example.com/article1</link>
+      <pubDate>Sun, 05 Jul 2026 14:30:00 GMT</pubDate>
+      <description>OpenAI announced a new language model this week that demonstrates improved reasoning capabilities across multiple benchmarks. The model shows significant gains in mathematical problem solving.</description>
+      <source url="https://techcrunch.com">TechCrunch</source>
+    </item>
+    <item>
+      <title>Google DeepMind Achieves Breakthrough in Protein Folding Prediction</title>
+      <link>https://example.com/article2</link>
+      <pubDate>Sat, 04 Jul 2026 10:15:00 GMT</pubDate>
+      <description>Researchers at Google DeepMind published findings on a new approach to protein structure prediction that outperforms previous methods by 25 percent. The breakthrough could accelerate drug discovery.</description>
+      <source url="https://nature.com">Nature</source>
+    </item>
+    <item>
+      <title>Meta Invests Billions in AI Infrastructure Expansion</title>
+      <link>https://example.com/article3</link>
+      <pubDate>Fri, 03 Jul 2026 09:45:00 GMT</pubDate>
+      <description>Meta announced a major investment in data centers and computing resources to support its AI research and product development initiatives. The company plans to acquire additional GPUs and establish new research facilities.</description>
+      <source url="https://reuters.com">Reuters</source>
+    </item>
+  </channel>
+</rss>
