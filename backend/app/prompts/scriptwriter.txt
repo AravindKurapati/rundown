@@ -15,7 +15,7 @@ Target word count = target_minutes x 150. Stay within about 7 percent of that to
 
 OUTPUT FORMAT
 Return ONLY a JSON array of segment objects, no prose before or after, no code fences. Each segment:
-{ "type": "intro" | "story" | "transition" | "outro", "speaker": <speaker id>, "text": <spoken words only> }
+{ "kind": "intro" | "story" | "transition" | "outro", "speaker": <speaker id>, "text": <spoken words only> }
 - Exactly one "intro" first and one "outro" last.
 - One "story" segment per selected news item.
 - "transition" segments are optional, short (one or two sentences), and used between stories where a bridge helps. If the bridge fits naturally as the first sentence of the next story, do that instead.
