@@ -26,8 +26,10 @@ def _stage(episode_id, name, fn):
 
 def generate_episode(episode_id, source, llm, tts, prefs):
     t0 = time.perf_counter()
-    interests = json.loads(prefs.interests_json)
     try:
+        # Parse inside the try so malformed preferences persist as a failed run
+        # rather than crashing the caller with an uncaught error.
+        interests = json.loads(prefs.interests_json)
         articles = _stage(episode_id, "gather",
                           lambda: [a for q in interests for a in source.fetch(q, limit=8)])
         articles = _stage(episode_id, "dedupe", lambda: dedupe(articles))

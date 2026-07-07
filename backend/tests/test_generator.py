@@ -9,6 +9,11 @@ class FakeSource:
         return [Article(title=f"{query} headline", url=f"http://x/{query}", source="s", published="", snippet="s")]
 
 
+class RaisingSource:
+    def fetch(self, query, limit=10):
+        raise RuntimeError("upstream feed is down")
+
+
 def test_generate_episode_end_to_end(tmp_path, monkeypatch):
     monkeypatch.setattr(dbmod, "engine", dbmod.make_engine(tmp_path / "t.db"))
     dbmod.init_db()
@@ -20,3 +25,31 @@ def test_generate_episode_end_to_end(tmp_path, monkeypatch):
     assert out.mp3_path and (tmp_path / f"{ep.id}.mp3").exists()
     assert out.tts_characters > 0 and out.est_cost_usd is not None
     assert out.duration_seconds is not None
+
+
+def test_generate_episode_persists_failed_on_stage_error(tmp_path, monkeypatch):
+    # A stage that raises must never crash the caller: the episode must land in
+    # "failed" with the error recorded, so the failed-path kwargs stay correct.
+    monkeypatch.setattr(dbmod, "engine", dbmod.make_engine(tmp_path / "t.db"))
+    dbmod.init_db()
+    prefs = repo.get_preferences()
+    ep = repo.create_episode(status="generating", host_mode="single")
+    monkeypatch.setattr("app.config.settings.audio_dir", tmp_path)
+    out = generate_episode(ep.id, RaisingSource(), FakeLLMClient(), FakeTTSClient(), prefs)
+    assert out.status == "failed"
+    assert out.error and "upstream feed is down" in out.error
+    assert out.latency_ms is not None
+
+
+def test_generate_episode_persists_failed_on_bad_prefs(tmp_path, monkeypatch):
+    # Malformed preferences must also be caught as a failed run, not raised out
+    # of the orchestrator uncaught (interests_json is not valid JSON here).
+    monkeypatch.setattr(dbmod, "engine", dbmod.make_engine(tmp_path / "t.db"))
+    dbmod.init_db()
+    prefs = repo.get_preferences()
+    prefs.interests_json = "not valid json"
+    ep = repo.create_episode(status="generating", host_mode="single")
+    monkeypatch.setattr("app.config.settings.audio_dir", tmp_path)
+    out = generate_episode(ep.id, FakeSource(), FakeLLMClient(), FakeTTSClient(), prefs)
+    assert out.status == "failed"
+    assert out.error
