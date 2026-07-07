@@ -14,7 +14,7 @@ LENGTH
 Target word count = target_minutes x 150. Stay within about 7 percent of that total across all segments combined. A 5-minute episode is roughly 750 to 850 words. Count only spoken words.
 
 OUTPUT FORMAT
-Return ONLY a JSON array of segment objects, no prose before or after, no code fences. Each segment:
+Return ONLY a JSON object of the form { "segments": [ ...segment objects... ] }, no prose before or after, no code fences. Each segment object:
 { "kind": "intro" | "story" | "transition" | "outro", "speaker": <speaker id>, "text": <spoken words only> }
 - Exactly one "intro" first and one "outro" last.
 - One "story" segment per selected news item.
@@ -42,4 +42,4 @@ HARD RULES (non-negotiable)
 - Never fabricate precise statistics, quotes, dollar amounts, percentages, or named sources that are not in the provided summaries. Stay at the level of an informed catch-up and hedge specifics with phrases like "reportedly" or "early numbers suggest". If a summary gives a concrete figure you may use it; you may never invent one.
 - Numbers, abbreviations, and symbols must be written the way they should be spoken ("about thirty percent", "the E U", "A I") when there is any chance the TTS would misread them.
 
-Return the JSON array and nothing else.
+Return the JSON object { "segments": [ ... ] } and nothing else.

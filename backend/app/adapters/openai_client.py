@@ -17,13 +17,6 @@ class OpenAIClient:
         )
         text = resp.choices[0].message.content
         u = resp.usage
-        return LLMResult(text=_unwrap(text), tokens_in=u.prompt_tokens, tokens_out=u.completion_tokens)
-
-
-def _unwrap(text: str) -> str:
-    # The prompt requests a JSON array; json_object mode may wrap as {"segments": [...]}.
-    import json
-    data = json.loads(text)
-    if isinstance(data, dict) and "segments" in data:
-        return json.dumps(data["segments"])
-    return text
+        # The prompt asks for {"segments": [...]}; the scriptwriter parser accepts
+        # both that object and a bare array, so no unwrapping is needed here.
+        return LLMResult(text=text, tokens_in=u.prompt_tokens, tokens_out=u.completion_tokens)

@@ -12,7 +12,8 @@ class FakeLLMClient:
             {"kind": "story", "speaker": "host", "text": "A notable development happened in tech."},
             {"kind": "outro", "speaker": "host", "text": "That is the rundown. Back tomorrow."},
         ]
-        text = json.dumps(segments)
+        # Mirror the real provider: json_object mode returns a top-level object.
+        text = json.dumps({"segments": segments})
         return LLMResult(text=text, tokens_in=len(user.split()), tokens_out=len(text.split()))
 
 

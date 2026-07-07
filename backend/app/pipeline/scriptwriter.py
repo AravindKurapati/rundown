@@ -38,6 +38,18 @@ def _user_message(articles: list[Article], prefs: Preferences) -> str:
     return json.dumps(payload)
 
 
+def _segments_from(text: str) -> list[dict]:
+    # OpenAI's response_format={"type": "json_object"} forces a top-level object,
+    # so the model returns {"segments": [...]}. Accept that and a bare [...] array
+    # so the parser does not depend on which shape the provider hands back.
+    data = json.loads(text)
+    if isinstance(data, dict):
+        data = data.get("segments", data.get("script", []))
+    if not isinstance(data, list):
+        raise ValueError('script must be a JSON array or {"segments": [...]}')
+    return data
+
+
 def _title_from(segments: list[Segment]) -> str:
     for s in segments:
         if s.kind == "intro":
@@ -48,7 +60,7 @@ def _title_from(segments: list[Segment]) -> str:
 
 def write_script(llm: LLMClient, articles: list[Article], prefs: Preferences) -> ScriptResult:
     res = llm.complete(_PROMPT, _user_message(articles, prefs), model=prefs.llm_model_script)
-    raw = json.loads(res.text)
+    raw = _segments_from(res.text)
     segments = [Segment(kind=s["kind"], speaker=s.get("speaker", "host"), text=s["text"]) for s in raw]
     if not segments or segments[0].kind != "intro" or segments[-1].kind != "outro":
         raise ValueError("script must start with intro and end with outro")
