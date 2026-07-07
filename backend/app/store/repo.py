@@ -1,6 +1,13 @@
+from datetime import datetime
 from sqlmodel import select
 from app.store.db import get_session
 from app.store.models import Preferences, Episode, GenerationEvent
+
+# Fields a client may never write directly: the primary key and the audit
+# timestamp. The server owns updated_at and re-stamps it on every save. This
+# also stops a full GET-then-PUT round-trip from feeding the serialized
+# updated_at string back into a datetime column.
+_PREFS_READONLY = {"id", "updated_at"}
 
 
 def get_preferences() -> Preferences:
@@ -12,8 +19,11 @@ def save_preferences(data: dict) -> Preferences:
     with get_session() as s:
         p = s.get(Preferences, 1)
         for k, v in data.items():
+            if k in _PREFS_READONLY:
+                continue
             if hasattr(p, k):
                 setattr(p, k, v)
+        p.updated_at = datetime.utcnow()
         s.add(p)
         s.commit()
         s.refresh(p)
