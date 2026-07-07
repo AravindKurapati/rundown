@@ -123,44 +123,17 @@ export default function PreferencesForm() {
         </div>
 
         <div>
-          <label htmlFor="host_mode" className={labelClass}>
-            One host or two
-          </label>
-          <select
-            id="host_mode"
-            value={prefs.host_mode}
-            onChange={(e) => update("host_mode", e.target.value)}
-            className={inputClass}
-          >
-            <option value="single">One host</option>
-            <option value="dual">Two hosts</option>
-          </select>
-        </div>
-
-        <div>
           <label htmlFor="voice_a" className={labelClass}>
             The voice
           </label>
-          <div className="space-y-2">
-            <input
-              id="voice_a"
-              type="text"
-              value={prefs.voice_a}
-              onChange={(e) => update("voice_a", e.target.value)}
-              placeholder="Primary voice"
-              className={inputClass}
-            />
-            {prefs.host_mode === "dual" && (
-              <input
-                id="voice_b"
-                type="text"
-                value={prefs.voice_b}
-                onChange={(e) => update("voice_b", e.target.value)}
-                placeholder="Second voice"
-                className={inputClass}
-              />
-            )}
-          </div>
+          <input
+            id="voice_a"
+            type="text"
+            value={prefs.voice_a}
+            onChange={(e) => update("voice_a", e.target.value)}
+            placeholder="Primary voice"
+            className={inputClass}
+          />
         </div>
       </div>
 
