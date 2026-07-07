@@ -35,3 +35,14 @@ def test_audio_404_before_ready(tmp_path, monkeypatch):
     from app.store import repo
     ep = repo.create_episode(status="generating")
     assert c.get(f"/api/episodes/{ep.id}/audio").status_code == 404
+
+
+def test_generate_409_when_generation_already_running(tmp_path, monkeypatch):
+    # The concurrency guard: a lingering "generating" episode must make a new
+    # generate request return 409 rather than starting a second run.
+    c = _client(tmp_path, monkeypatch)
+    from app.store import repo
+    repo.create_episode(status="generating")
+    r = c.post("/api/episodes/generate")
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "busy"
