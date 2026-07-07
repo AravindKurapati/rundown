@@ -1,8 +1,5 @@
 import { Routes, Route, Link } from "react-router-dom";
-
-function Studio() {
-  return <div className="p-6">Studio placeholder.</div>;
-}
+import Studio from "./pages/Studio";
 
 function Dashboard() {
   return <div className="p-6">Dashboard placeholder.</div>;
