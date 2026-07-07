@@ -31,6 +31,9 @@ dist/
 # (Ignoring `data/` itself would stop `!data/.gitkeep` from re-including the file.)
 data/*
 !data/.gitkeep
+# The Makefile runs from backend/, so DATA_DIR resolves to backend/data/ at
+# runtime (db + generated audio). The root-anchored data/* rule above misses it.
+backend/data/
 # The showcase sample at repo root is committed deliberately.
 *.mp3
 !sample.mp3
