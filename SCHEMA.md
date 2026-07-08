@@ -10,7 +10,7 @@ Singleton table storing application settings (id=1, created on init).
 | interests_json | str | '["AI", "startups", "markets"]' | User interests as JSON array |
 | tone | str | "sharp, warm, lightly witty" | Narration tone style |
 | target_minutes | int | 5 | Target episode length in minutes |
-| host_mode | str | "single" | Hosting mode (single or dual) |
+| host_mode | str | "single" | Hosting mode; "single" ships, "two" is a documented stretch |
 | voice_a | str | "Rachel" | Primary voice name |
 | voice_b | str | "Antoni" | Secondary voice name |
 | tts_model | str | "eleven_multilingual_v2" | TTS model identifier |
@@ -20,7 +20,7 @@ Singleton table storing application settings (id=1, created on init).
 | schedule_time | str | "07:00" | Scheduled generation time (HH:MM) |
 | timezone | str | "America/New_York" | User timezone |
 | budget_cap_usd | float | 20.0 | Monthly budget cap in USD |
-| updated_at | datetime | utcnow() | Last update timestamp |
+| updated_at | datetime | now(UTC) | Last update timestamp (tz-aware UTC) |
 
 ## episodes
 
@@ -31,7 +31,7 @@ Podcast episodes with generation metadata and status.
 | id | int | NULL | Primary key (auto-increment) |
 | title | str | "" | Episode title |
 | status | str | "pending" | One of: pending, generating, ready, failed |
-| created_at | datetime | utcnow() | Creation timestamp |
+| created_at | datetime | now(UTC) | Creation timestamp (tz-aware UTC) |
 | completed_at | datetime | NULL | Completion timestamp |
 | mp3_path | str | NULL | Path to generated MP3 file |
 | transcript_json | str | NULL | Episode transcript as JSON |
@@ -41,7 +41,7 @@ Podcast episodes with generation metadata and status.
 | openai_tokens | int | NULL | Tokens used for LLM calls |
 | est_cost_usd | float | NULL | Estimated cost in USD |
 | latency_ms | int | NULL | End-to-end generation latency |
-| host_mode | str | "single" | Hosting mode used for this episode |
+| host_mode | str | "single" | Hosting mode used for this episode (single ships) |
 | source_count | int | NULL | Number of sources processed |
 | topics_json | str | NULL | Topics covered as JSON array |
 | error | str | NULL | Error message if generation failed |
@@ -55,7 +55,7 @@ Stage-level events during episode generation for debugging and monitoring.
 | id | int | NULL | Primary key (auto-increment) |
 | episode_id | int | Required | Foreign key to episodes.id |
 | stage | str | Required | Pipeline stage name |
-| started_at | datetime | utcnow() | Stage start timestamp |
+| started_at | datetime | now(UTC) | Stage start timestamp (tz-aware UTC) |
 | ended_at | datetime | NULL | Stage completion timestamp |
 | duration_ms | int | NULL | Stage duration in milliseconds |
 | ok | bool | True | Success flag |

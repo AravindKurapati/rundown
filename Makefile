@@ -1,4 +1,7 @@
-.PHONY: dev test sample seed
+.PHONY: setup dev test sample seed
+setup:
+	cd backend && pip install -e ".[dev]"
+	cd frontend && npm install
 test:
 	cd backend && python -m pytest -q
 dev:
