@@ -1,6 +1,10 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class Preferences(SQLModel, table=True):
@@ -18,14 +22,14 @@ class Preferences(SQLModel, table=True):
     schedule_time: str = "07:00"
     timezone: str = "America/New_York"
     budget_cap_usd: float = 20.0
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
 
 
 class Episode(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str = ""
     status: str = "pending"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
     completed_at: Optional[datetime] = None
     mp3_path: Optional[str] = None
     transcript_json: Optional[str] = None
@@ -45,7 +49,7 @@ class GenerationEvent(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     episode_id: int = Field(foreign_key="episode.id")
     stage: str
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=_utcnow)
     ended_at: Optional[datetime] = None
     duration_ms: Optional[int] = None
     ok: bool = True

@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import asdict
 from app.config import settings
 from app.store import repo
@@ -46,7 +46,7 @@ def generate_episode(episode_id, source, llm, tts, prefs):
             episode_id,
             status="ready",
             title=script.title,
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(timezone.utc),
             mp3_path=str(path),
             transcript_json=json.dumps([asdict(s) for s in script.segments]),
             duration_seconds=duration,

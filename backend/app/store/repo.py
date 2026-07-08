@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import select
 from app.store.db import get_session
 from app.store.models import Preferences, Episode, GenerationEvent
@@ -23,7 +23,7 @@ def save_preferences(data: dict) -> Preferences:
                 continue
             if hasattr(p, k):
                 setattr(p, k, v)
-        p.updated_at = datetime.utcnow()
+        p.updated_at = datetime.now(timezone.utc)
         s.add(p)
         s.commit()
         s.refresh(p)

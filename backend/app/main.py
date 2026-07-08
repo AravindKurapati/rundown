@@ -1,16 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.store.db import init_db
 from app.api import preferences, episodes, schedule, metrics
 
-app = FastAPI(title="Rundown")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Rundown", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"],
                    allow_methods=["*"], allow_headers=["*"])
-
-
-@app.on_event("startup")
-def _startup():
-    init_db()
 
 
 @app.get("/api/health")
