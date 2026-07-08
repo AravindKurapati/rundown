@@ -38,7 +38,7 @@ The segment contract is host-agnostic on purpose. Single-host is what ships: eve
 You need Python 3.11+ and Node 18+.
 
 ```
-cp backend/.env.example backend/.env    # keys optional while USE_FAKES=1
+cp .env.example backend/.env            # keys optional while USE_FAKES=1
 make setup                              # backend (pip -e) + frontend (npm install)
 make test                               # offline test suite, no network, no spend
 ```
