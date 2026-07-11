@@ -4,7 +4,12 @@ from datetime import datetime, timezone
 from dataclasses import asdict
 from app.config import settings
 from app.store import repo
-from app.store.metrics import episode_cost
+from app.store.metrics import (
+    episode_cost,
+    budget_would_exceed,
+    total_spent_usd,
+    BudgetExceeded,
+)
 from app.pipeline.dedupe import dedupe
 from app.pipeline.scriptwriter import write_script
 from app.pipeline.narrate import narrate_single
@@ -34,6 +39,18 @@ def generate_episode(episode_id, source, llm, tts, prefs):
                           lambda: [a for q in interests for a in source.fetch(q, limit=8)])
         articles = _stage(episode_id, "dedupe", lambda: dedupe(articles))
         script = _stage(episode_id, "script", lambda: write_script(llm, articles, prefs))
+
+        # Budget gate: refuse before the expensive TTS call if this run's
+        # projected cost would push committed spend past the cap. projected_chars
+        # mirrors the exact string narrate_single joins and sends.
+        projected_chars = len(" ".join(s.text.strip() for s in script.segments))
+        projected = episode_cost(projected_chars, script.tokens_in, script.tokens_out)
+        if budget_would_exceed(projected):
+            raise BudgetExceeded(
+                f"budget cap: projected ${projected:.2f} + spent "
+                f"${total_spent_usd():.2f} exceeds cap ${settings.budget_cap_usd:.2f}"
+            )
+
         narration = _stage(episode_id, "narrate",
                           lambda: narrate_single(tts, script.segments, prefs.voice_a, prefs.tts_model))
 

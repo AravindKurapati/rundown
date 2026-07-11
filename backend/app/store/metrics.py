@@ -12,6 +12,22 @@ def episode_cost(tts_chars: int, tokens_in: int, tokens_out: int) -> float:
     return round(tts + llm, 4)
 
 
+class BudgetExceeded(Exception):
+    """A generation run's projected cost would cross the budget cap."""
+
+
+def total_spent_usd() -> float:
+    """Committed spend so far: sum of est_cost_usd over ready episodes."""
+    with get_session() as s:
+        eps = list(s.exec(select(Episode).where(Episode.status == "ready")))
+    return sum(e.est_cost_usd or 0.0 for e in eps)
+
+
+def budget_would_exceed(projected_usd: float) -> bool:
+    """True if committed spend plus this run's projected cost strictly exceeds the cap."""
+    return total_spent_usd() + projected_usd > settings.budget_cap_usd
+
+
 def overview() -> dict:
     with get_session() as s:
         eps = list(s.exec(select(Episode)))

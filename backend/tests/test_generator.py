@@ -53,3 +53,23 @@ def test_generate_episode_persists_failed_on_bad_prefs(tmp_path, monkeypatch):
     out = generate_episode(ep.id, FakeSource(), FakeLLMClient(), FakeTTSClient(), prefs)
     assert out.status == "failed"
     assert out.error
+
+
+def test_generate_blocked_when_over_budget(tmp_path, monkeypatch):
+    # Prior ready spend already sits at the cap, so the next run's projected cost
+    # crosses it: the run must fail before any TTS spend, with no audio written.
+    monkeypatch.setattr(dbmod, "engine", dbmod.make_engine(tmp_path / "t.db"))
+    dbmod.init_db()
+    prefs = repo.get_preferences()
+    monkeypatch.setattr("app.config.settings.budget_cap_usd", 1.0)
+    repo.create_episode(status="ready", est_cost_usd=1.0)
+    ep = repo.create_episode(status="generating", host_mode="single")
+    monkeypatch.setattr("app.config.settings.audio_dir", tmp_path)
+
+    tts = FakeTTSClient()
+    out = generate_episode(ep.id, FakeSource(), FakeLLMClient(), tts, prefs)
+
+    assert out.status == "failed"
+    assert out.error and "budget" in out.error.lower()
+    assert len(tts.calls) == 0
+    assert not (tmp_path / f"{ep.id}.mp3").exists()
