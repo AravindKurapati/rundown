@@ -24,6 +24,8 @@ class Settings:
         self.use_fakes = os.getenv("USE_FAKES", "1") == "1"
         self.data_dir = Path(os.getenv("DATA_DIR", "data")).resolve()
         self.db_path = self.data_dir / "rundown.db"
+        # Full SQLAlchemy URL (e.g. postgresql+psycopg://...); empty -> local SQLite.
+        self.database_url = os.getenv("DATABASE_URL", "")
         self.audio_dir = self.data_dir / "audio"
         self.audio_dir.mkdir(parents=True, exist_ok=True)
 

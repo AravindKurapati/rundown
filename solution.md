@@ -24,9 +24,9 @@ The fakes earned their keep within days. Because the fake TTS records its calls 
 
 And the honest dashboard. The assignment allows mocked metrics, and product-level analytics like DAU are mocked, but every mock row carries an `is_mock` flag and the UI says so on every figure. Latency, cost, and success rate come from real runs. If I put a number in front of a customer, I want to be able to explain where it came from, and that habit should not relax for a take-home.
 
-## Decisions I would revisit with more time
+And the budget cap is a gate, not just a readout. A generation whose projected cost would cross `budget_cap_usd` is refused before the paid ElevenLabs call, and the episode records why it stopped. It was the smallest high-leverage thing to add, and it turns the cost dashboard from advisory into load-bearing: the number on screen is one the system will actually enforce.
 
-The budget cap is a readout, not a gate: the dashboard shows spend against the cap, but nothing refuses a generation that would cross it. Enforcement is a small change and it is the first thing I would add.
+## Decisions I would revisit with more time
 
 The single-generation lock lives in the database as an episode status, so a process that dies mid-run leaves a stuck "generating" row until it is cleaned up. Fine for one user locally; a real deployment wants a lease with a timeout.
 
@@ -36,7 +36,7 @@ The frontend has no automated tests. For a take-home of this size I put the test
 
 ## How I would extend this for a real customer
 
-This is where the seams pay off. Multiple listeners: preferences become per-user rows and the pipeline already takes preferences as an argument, so fan-out is a loop before it needs to be a queue. When it does need one, the headless CLI boundary is exactly where a durable queue slots in, with cloud cron replacing the user's crontab. The news source protocol swaps RSS for a licensed API the moment there is an SLA conversation. SQLite and local files become Postgres and object storage along a path the code already isolates behind the store layer.
+This is where the seams pay off. Multiple listeners: preferences become per-user rows and the pipeline already takes preferences as an argument, so fan-out is a loop before it needs to be a queue. When it does need one, the headless CLI boundary is exactly where a durable queue slots in, with cloud cron replacing the user's crontab. The news source protocol swaps RSS for a licensed API the moment there is an SLA conversation. SQLite and local files become Postgres and object storage along a path the code already isolates behind the store layer: the engine reads a `DATABASE_URL`, so moving the database is a connection string plus a psycopg driver and migrations, not a rewrite. I ran it on SQLite because that is the right size for one listener; the URL is the seam that makes Postgres a config change.
 
 Observability is the part I would grow first, because the seed is planted: every stage of every generation already writes a timing-and-outcome event row. For a customer, that becomes alerting on failure rate and latency drift, and the cost dashboard stops being a courtesy and becomes the billing conversation, per-tenant spend against per-tenant caps, with enforcement.
 
