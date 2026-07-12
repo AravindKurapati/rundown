@@ -45,7 +45,13 @@ make test                               # offline test suite, no network, no spe
 
 With `USE_FAKES=1` (the default in `.env.example`) the LLM and TTS clients are fakes: everything runs offline and free, no keys needed. Add your OpenAI and ElevenLabs keys and set `USE_FAKES=0` for real episodes.
 
-Run the app in two terminals (reliable on Windows and Unix):
+Start the app with one command, any OS:
+
+```
+python dev.py     # API on :8000, UI on :5173; Ctrl-C stops both
+```
+
+Then open http://localhost:5173. `make dev` runs the same thing. Prefer two terminals? That works too:
 
 ```
 # terminal 1: API on http://localhost:8000
@@ -55,7 +61,7 @@ cd backend && uvicorn app.main:app --reload --port 8000
 cd frontend && npm run dev
 ```
 
-On Unix, `make dev` starts both at once. Other targets:
+Other targets:
 
 ```
 make seed      # 90 days of clearly-flagged mock analytics for the Dashboard
@@ -84,7 +90,7 @@ The schedule cadence and time you set in the Studio are saved as preferences and
 - **Premium where it is heard, cheap where it is invisible.** A quality voice and a capable model for the script; the small model tier for the selection reasoning the listener never hears. All model ids and rates are configurable in `.env`.
 - **Fake LLM and TTS adapters behind the same interfaces.** Dev, tests, and CI cost nothing and never flake on the network. The fake TTS records its calls, so a test can assert the load-bearing property: exactly one synthesis call per episode.
 - **Scheduling is persisted config plus a headless CLI**, not an in-process scheduler with restart and duplicate-run problems.
-- **SQLite and local MP3 files.** The right size for one listener on one machine, with the Postgres and object-storage path documented, not built.
+- **SQLite and local MP3 files.** The right size for one listener on one machine. The engine reads a `DATABASE_URL`, so Postgres is a connection string away (plus a driver and migrations); object storage stays documented, not built.
 - **Dashboard honesty.** Real metrics (latency, cost, success rate) come from real runs. Mock product analytics (DAU, listen-through) carry an `is_mock` flag in the data and a "Mock data, not real" badge everywhere they render in the UI.
 
 See `solution.md` for the full trade-off reasoning and `SCHEMA.md` for the data model.
