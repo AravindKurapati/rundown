@@ -16,9 +16,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg text-ink">
       <header className="sticky top-0 z-20 flex items-center gap-5 border-b border-line bg-bg/80 px-4 py-3 backdrop-blur sm:px-8">
-        <div className="flex items-baseline gap-3">
-          <span className="wordmark text-2xl font-normal">RUNDOWN</span>
-          <span className="live-dot">ON AIR</span>
+        <div className="flex flex-col">
+          <div className="flex items-baseline gap-3">
+            <span className="wordmark text-2xl font-normal leading-none">RUNDOWN</span>
+            <span className="live-dot">ON AIR</span>
+          </div>
+          <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
+            Al día, cada día
+          </span>
         </div>
 
         <nav className="ml-1 flex gap-1">
