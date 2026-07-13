@@ -23,7 +23,7 @@ module.exports = {
       },
       fontFamily: {
         display: ['"Anton"', "Impact", '"Arial Narrow"', "sans-serif"],
-        sans: ['"Public Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ['"Fraunces"', "Georgia", "Cambria", "serif"],
         mono: ['"IBM Plex Mono"', "ui-monospace", "Consolas", "monospace"],
       },
       letterSpacing: {
