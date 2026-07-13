@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 from sqlmodel import select
 from app.config import settings
 from app.store.db import get_session
-from app.store.models import Episode, AnalyticsDaily
+from app.store.models import Episode, AnalyticsDaily, GenerationEvent
 
 
 def episode_cost(tts_chars: int, tokens_in: int, tokens_out: int) -> float:
@@ -47,6 +47,27 @@ def overview() -> dict:
         "budget_cap_usd": cap,
         "budget_used_pct": round((cost / cap * 100) if cap else 0, 1),
     }
+
+
+def last_pipeline() -> dict:
+    """Per-stage telemetry for the most recent run (gather/dedupe/script/narrate),
+    straight from the generation_event rows the pipeline writes."""
+    with get_session() as s:
+        ep = s.exec(select(Episode).order_by(Episode.id.desc())).first()
+        if ep is None:
+            return {"run_at": None, "stages": []}
+        events = list(
+            s.exec(
+                select(GenerationEvent)
+                .where(GenerationEvent.episode_id == ep.id)
+                .order_by(GenerationEvent.id)
+            )
+        )
+    stages = [
+        {"stage": e.stage, "duration_ms": e.duration_ms or 0, "ok": bool(e.ok)}
+        for e in events
+    ]
+    return {"run_at": ep.created_at.isoformat() if ep.created_at else None, "stages": stages}
 
 
 def timeseries(metric: str, days: int) -> list[dict]:

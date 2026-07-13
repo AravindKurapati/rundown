@@ -18,6 +18,14 @@ FALLBACK_VOICES = [
 ]
 
 
+def voice_name_for(voice_id: str) -> str:
+    """A human name for a voice id (used in the pre-flight summary)."""
+    for v in FALLBACK_VOICES:
+        if v["id"] == voice_id:
+            return v["name"]
+    return "Custom voice"
+
+
 @router.get("/voices")
 def get_voices():
     """List selectable voices. Live from ElevenLabs when keys are present;

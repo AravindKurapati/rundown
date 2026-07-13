@@ -18,15 +18,24 @@ interface EpisodeLibraryProps {
   autoExpandId?: number | null;
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  ready: "border-good text-good",
-  generating: "border-amber text-amber",
-  pending: "border-line text-muted",
-  failed: "border-air text-air",
+interface StatusChip {
+  label: string;
+  cls: string;
+  dot?: boolean;
+}
+
+const STATUS: Record<string, StatusChip> = {
+  ready: { label: "READY", cls: "border-good text-good" },
+  generating: { label: "ON AIR", cls: "border-air text-air", dot: true },
+  failed: { label: "FAILED", cls: "border-air text-air" },
+  pending: { label: "PENDING", cls: "border-line text-muted" },
 };
 
-function statusBadgeClass(status: string): string {
-  return STATUS_STYLES[status] ?? "border-line text-muted";
+// Resting waveform for the empty state: still, symmetrical, taller in the middle.
+const RESTING = [22, 34, 46, 60, 74, 88, 100, 88, 74, 60, 46, 34, 22];
+
+function chipFor(status: string): StatusChip {
+  return STATUS[status] ?? { label: status.toUpperCase(), cls: "border-line text-muted" };
 }
 
 function formatDuration(seconds: number): string {
@@ -84,28 +93,35 @@ export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLi
   }
 
   return (
-    <div className="space-y-3">
-      <div className="mb-1 flex items-center gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">
-          Past episodes
-        </p>
-        <span className="h-px flex-1 bg-line" />
+    <div>
+      <div className="mb-4 flex items-center gap-3">
+        <span className="font-mono text-sm text-faint">03</span>
+        <h2 className="wordmark text-2xl leading-none text-ink">Past episodes</h2>
+        <span className="ml-auto font-mono text-[11px] uppercase tracking-wider text-faint">
+          Rundown | Archive
+        </span>
       </div>
 
       {!loading && episodes.length === 0 && (
-        <p className="text-sm text-muted">Everything you make will pile up here.</p>
+        <div className="rounded-2xl border border-line bg-bg2 py-14 text-center">
+          <div className="mx-auto mb-6 flex h-14 items-end justify-center gap-1" aria-hidden="true">
+            {RESTING.map((h, i) => (
+              <span key={i} className="w-1 rounded-full bg-amber" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+          <h3 className="wordmark text-3xl text-ink">Nothing on the wire yet</h3>
+          <p className="mt-2 text-sm text-muted">Pick your interests and make the first one.</p>
+        </div>
       )}
 
       {episodes.length > 0 && (
-        <ul className="space-y-3">
-          {episodes.map((ep) => {
+        <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-bg2">
+          {episodes.map((ep, i) => {
             const title = ep.title || `Episode ${ep.id}`;
             const open = expandedId === ep.id;
+            const chip = chipFor(ep.status);
             return (
-              <li
-                key={ep.id}
-                className="overflow-hidden rounded-2xl border border-line bg-bg2 transition-colors"
-              >
+              <li key={ep.id}>
                 <button
                   type="button"
                   onClick={() => void expand(ep.id)}
@@ -117,16 +133,24 @@ export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLi
                     live={ep.status === "generating"}
                     className="h-14 w-14 flex-shrink-0 rounded-xl"
                   />
+                  <span className="w-6 flex-shrink-0 font-mono text-xs text-faint">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-ink">{title}</span>
-                    <span className="mt-0.5 block font-mono text-[11px] text-faint">
+                    <span className="wordmark block truncate text-lg leading-none text-ink">
+                      {title}
+                    </span>
+                    <span className="mt-1 block font-mono text-[11px] text-faint">
                       {metaLine(ep)}
                     </span>
                   </span>
                   <span
-                    className={`flex-shrink-0 rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wide ${statusBadgeClass(ep.status)}`}
+                    className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider ${chip.cls}`}
                   >
-                    {ep.status}
+                    {chip.dot && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-air" aria-hidden="true" />
+                    )}
+                    {chip.label}
                   </span>
                   <span
                     aria-hidden="true"
@@ -144,6 +168,7 @@ export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLi
                         title={title}
                         transcriptJson={detail.transcript_json}
                         durationSeconds={ep.duration_seconds}
+                        date={ep.created_at}
                       />
                     ) : (
                       <p className="text-sm text-faint">Loading…</p>

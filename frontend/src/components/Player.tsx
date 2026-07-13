@@ -13,6 +13,7 @@ interface PlayerProps {
   title: string;
   transcriptJson: string | null;
   durationSeconds?: number | null;
+  date?: string | null;
 }
 
 function parseTranscript(raw: string | null): TranscriptSegment[] {
@@ -31,6 +32,7 @@ export default function Player({
   title,
   transcriptJson,
   durationSeconds,
+  date,
 }: PlayerProps) {
   const [showTranscript, setShowTranscript] = useState(false);
   const segments = parseTranscript(transcriptJson);
@@ -42,6 +44,7 @@ export default function Player({
         title={title}
         seed={episodeId}
         durationHint={durationSeconds}
+        date={date}
       />
 
       {segments.length > 0 && (

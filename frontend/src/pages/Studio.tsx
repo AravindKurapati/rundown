@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
-import type { EpisodeSummary, Preferences } from "../types";
+import type { EpisodeSummary, Estimate, Preferences } from "../types";
 import PreferencesForm from "../components/PreferencesForm";
 import EpisodeLibrary from "../components/EpisodeLibrary";
 import EpisodeCover from "../components/EpisodeCover";
@@ -61,6 +61,8 @@ export default function Studio() {
   const [autoExpandId, setAutoExpandId] = useState<number | null>(null);
   const [episodes, setEpisodes] = useState<EpisodeSummary[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
+  const [confirming, setConfirming] = useState(false);
+  const [estimate, setEstimate] = useState<Estimate | null>(null);
   const libraryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,7 +99,20 @@ export default function Studio() {
     libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  async function openConfirm() {
+    setStatusMessage(null);
+    try {
+      const e = (await api.estimate()) as Estimate;
+      setEstimate(e);
+      setConfirming(true);
+    } catch {
+      // If the estimate can't be fetched, don't block the user — generate.
+      void onGenerate();
+    }
+  }
+
   async function onGenerate() {
+    setConfirming(false);
     setBusy(true);
     setStatusMessage(null);
     try {
@@ -165,30 +180,73 @@ export default function Studio() {
             </div>
           )}
 
-          <div className="mt-7 flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              onClick={() => void onGenerate()}
-              disabled={busy}
-              className="inline-flex items-center gap-2.5 rounded-full bg-[#f5ede1] px-7 py-4 text-sm font-extrabold uppercase tracking-wide text-[#161009] transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
-            >
-              <span aria-hidden="true">{busy ? "●" : "▸"}</span>
-              {busy ? "On air…" : "Make today's episode"}
-            </button>
+          <div className="mt-7">
+            {confirming && estimate ? (
+              <div className="max-w-sm rounded-2xl border border-white/15 bg-[#161009]/90 p-5 backdrop-blur">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-coral">
+                  Ready to record
+                </p>
+                <p className="mt-2 text-lg font-semibold text-[#f5ede1]">
+                  ~{estimate.minutes} min · {estimate.voice_name}
+                </p>
+                {estimate.topics.length > 0 && (
+                  <p className="mt-1 text-sm text-[#efe4d4]/80">{estimate.topics.join(" · ")}</p>
+                )}
+                <p className="mt-3 font-mono text-sm text-[#f5ede1]">
+                  {estimate.offline
+                    ? "Free · offline mode"
+                    : `Est. cost ~$${estimate.est_cost_usd.toFixed(2)}`}
+                </p>
+                {estimate.would_exceed_budget && (
+                  <p className="mt-2 text-sm font-semibold text-air">
+                    This would cross your ${estimate.budget_cap_usd.toFixed(0)} budget cap.
+                  </p>
+                )}
+                <div className="mt-4 flex gap-3">
+                  <button
+                    type="button"
+                    disabled={estimate.would_exceed_budget}
+                    onClick={() => void onGenerate()}
+                    className="rounded-full bg-[#f5ede1] px-5 py-2.5 text-sm font-extrabold uppercase tracking-wide text-[#161009] transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    Make it
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirming(false)}
+                    className="rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-[#efe4d4] transition-colors hover:border-white/50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => void openConfirm()}
+                  disabled={busy}
+                  className="inline-flex items-center gap-2.5 rounded-full bg-[#f5ede1] px-7 py-4 text-sm font-extrabold uppercase tracking-wide text-[#161009] transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+                >
+                  <span aria-hidden="true">{busy ? "●" : "▸"}</span>
+                  {busy ? "On air…" : "Make today's episode"}
+                </button>
 
-            {busy && (
-              <span className="font-mono text-sm text-[#efe4d4]/80">
-                {STAGE_PHRASES[stageIndex]}…
-              </span>
-            )}
-            {!busy && statusMessage && (
-              <span className={`text-sm font-semibold ${statusToneClass(statusMessage.tone)}`}>
-                {statusMessage.text}
-              </span>
+                {busy && (
+                  <span className="font-mono text-sm text-[#efe4d4]/80">
+                    {STAGE_PHRASES[stageIndex]}…
+                  </span>
+                )}
+                {!busy && statusMessage && (
+                  <span className={`text-sm font-semibold ${statusToneClass(statusMessage.tone)}`}>
+                    {statusMessage.text}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
-          {!busy && !statusMessage && !hasEpisodes && (
+          {!busy && !confirming && !statusMessage && !hasEpisodes && (
             <p className="mt-5 max-w-md text-sm text-[#efe4d4]/80">{EMPTY_STATE}</p>
           )}
         </div>

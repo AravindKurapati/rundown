@@ -12,3 +12,8 @@ def overview():
 @router.get("/timeseries")
 def timeseries(metric: str, days: int = 30):
     return metrics.timeseries(metric, days)
+
+
+@router.get("/pipeline")
+def pipeline():
+    return metrics.last_pipeline()

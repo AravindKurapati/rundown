@@ -6,9 +6,11 @@ interface AudioPlayerProps {
   title: string;
   seed: number;
   durationHint?: number | null;
+  date?: string | null;
 }
 
 const RATES = [1, 1.25, 1.5, 2];
+const STATION = "FM 89.7"; // decorative station call-sign (brand dressing)
 
 function fmt(seconds: number): string {
   if (!Number.isFinite(seconds)) return "0:00";
@@ -17,10 +19,17 @@ function fmt(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// Designed player: generative cover + title + a real, keyboard-seekable scrubber
-// wrapping a native <audio> (kept for correctness; the custom chrome replaces
-// the browser's default bar).
-export default function AudioPlayer({ src, title, seed, durationHint }: AudioPlayerProps) {
+function fmtDate(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} · ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// Designed player, styled as an on-air deck: generative cover + Anton title +
+// mono readouts + transport controls. Wraps a hidden native <audio>.
+export default function AudioPlayer({ src, title, seed, durationHint, date }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [cur, setCur] = useState(0);
@@ -69,57 +78,99 @@ export default function AudioPlayer({ src, title, seed, durationHint }: AudioPla
     setCur(value);
   }
 
-  // Prefer the audio element's real duration; fall back to the value we already
-  // know from the episode record so the total shows before metadata loads.
+  function skip(delta: number) {
+    const el = audioRef.current;
+    if (!el) return;
+    const t = Math.max(0, el.currentTime + delta);
+    el.currentTime = t;
+    setCur(t);
+  }
+
   const total = dur > 0 ? dur : durationHint ?? 0;
   const pct = total > 0 ? (cur / total) * 100 : 0;
+  const skipBtn =
+    "rounded-md border border-line px-3 py-2 font-mono text-xs font-semibold text-muted transition-colors hover:border-amber hover:text-ink";
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-line bg-bg3 p-3 sm:p-4">
-      <EpisodeCover
-        seed={seed}
-        live={playing}
-        className="h-16 w-16 flex-shrink-0 rounded-xl sm:h-20 sm:w-20"
-      />
+    <div className="overflow-hidden rounded-2xl border border-line bg-bg2">
+      <div className="flex flex-col sm:flex-row">
+        <div className="border-b border-line bg-bg3 sm:w-[30%] sm:border-b-0 sm:border-r">
+          <EpisodeCover seed={seed} live={playing} className="h-44 w-full sm:h-full" />
+        </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-ink">{title}</p>
+        <div className="min-w-0 flex-1 p-4 sm:p-5">
+          <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
+            <span className={playing ? "text-coral" : undefined}>On air</span>
+            <span>{STATION}</span>
+          </div>
 
-        <div className="mt-2 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={playing ? "Pause" : "Play"}
-            aria-pressed={playing}
-            className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-air text-white shadow-[var(--glow)] transition-transform hover:scale-105"
-          >
-            <span aria-hidden="true">{playing ? "❚❚" : "▶"}</span>
-          </button>
+          <div className="mt-2 flex items-start justify-between gap-3">
+            <h3 className="wordmark min-w-0 truncate text-2xl leading-none text-ink sm:text-[28px]">
+              {title}
+            </h3>
+            {playing && (
+              <span className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-md border border-air px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-air">
+                <span className="h-1.5 w-1.5 rounded-full bg-air" />
+                Live
+              </span>
+            )}
+          </div>
 
-          <input
-            type="range"
-            className="player-range flex-1"
-            min={0}
-            max={total || 0}
-            step={0.1}
-            value={cur}
-            onChange={(e) => seek(Number(e.target.value))}
-            aria-label="Seek"
-            style={{ ["--pct" as string]: `${pct}%` }}
-          />
+          {date && <p className="mt-1.5 font-mono text-xs text-faint">{fmtDate(date)}</p>}
 
-          <span className="w-20 flex-shrink-0 text-right font-mono text-xs tabular-nums text-muted">
-            {fmt(cur)} / {fmt(total)}
-          </span>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="w-10 font-mono text-xs tabular-nums text-muted">{fmt(cur)}</span>
+            <input
+              type="range"
+              className="player-range flex-1"
+              min={0}
+              max={total || 0}
+              step={0.1}
+              value={cur}
+              onChange={(e) => seek(Number(e.target.value))}
+              aria-label="Seek"
+              style={{ ["--pct" as string]: `${pct}%` }}
+            />
+            <span className="w-10 text-right font-mono text-xs tabular-nums text-muted">
+              {fmt(total)}
+            </span>
+          </div>
 
-          <button
-            type="button"
-            onClick={cycleRate}
-            aria-label={`Playback speed ${rate} times`}
-            className="flex-shrink-0 rounded-full border border-line px-2.5 py-1 font-mono text-xs font-semibold text-muted transition-colors hover:border-amber hover:text-ink"
-          >
-            {rate}×
-          </button>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="font-mono leading-tight">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-faint">Rundown</p>
+              <p className="text-xs font-semibold text-amber">{STATION}</p>
+              <p className="text-[10px] uppercase tracking-wider text-faint">
+                IDX {String(seed).padStart(2, "0")}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button type="button" onClick={() => skip(-15)} aria-label="Back 15 seconds" className={skipBtn}>
+                −15
+              </button>
+              <button
+                type="button"
+                onClick={toggle}
+                aria-label={playing ? "Pause" : "Play"}
+                aria-pressed={playing}
+                className="grid h-12 w-12 place-items-center rounded-full bg-ink text-bg transition-transform hover:scale-105"
+              >
+                <span aria-hidden="true">{playing ? "❚❚" : "▶"}</span>
+              </button>
+              <button type="button" onClick={() => skip(15)} aria-label="Forward 15 seconds" className={skipBtn}>
+                +15
+              </button>
+              <button
+                type="button"
+                onClick={cycleRate}
+                aria-label={`Playback speed ${rate} times`}
+                className="rounded-md border border-line px-2.5 py-2 font-mono text-xs font-semibold text-muted transition-colors hover:border-amber hover:text-ink"
+              >
+                {rate}×
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
