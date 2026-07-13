@@ -34,7 +34,7 @@ The single-generation lock lives in the database as an episode status. In the fi
 
 Dedupe is exact-match on normalized titles and URLs. It catches syndication, but two outlets writing different headlines about the same event both get through, and the prompt is instructed to cut the duplicate. Cheap embedding similarity would do this properly. And episode duration is estimated from word count rather than decoded from the audio, which is honest enough for a player but is still an estimate wearing a number's clothes.
 
-The frontend has no automated tests. For a take-home of this size I put the test budget on the backend, where the load-bearing logic lives (the pipeline, the cost model, the one-call property, the API contract), and verified the two React pages by hand against the fake backend. A production version would add component tests around the generate-and-poll flow and the dashboard's real-versus-mock rendering.
+The frontend test budget is deliberately thin. The load-bearing logic lives in the backend (the pipeline, the cost model, the one-call property, the API contract), so that is where the coverage is concentrated. On the frontend I added two smoke tests over the pieces that carry real display logic, the episode status-chip mapping and the player's speed control, and verified the two pages by hand against the fake backend. A production version would grow that into component tests around the generate-and-poll flow and the dashboard's real-versus-mock rendering.
 
 ## How I would extend this for a real customer
 
