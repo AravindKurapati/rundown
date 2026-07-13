@@ -140,9 +140,6 @@ export default function AudioPlayer({ src, title, seed, durationHint, date }: Au
             <div className="font-mono leading-tight">
               <p className="text-[10px] uppercase tracking-[0.16em] text-faint">Rundown</p>
               <p className="text-xs font-semibold text-amber">{STATION}</p>
-              <p className="text-[10px] uppercase tracking-wider text-faint">
-                IDX {String(seed).padStart(2, "0")}
-              </p>
             </div>
 
             <div className="flex items-center gap-2.5">
