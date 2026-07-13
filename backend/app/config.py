@@ -14,7 +14,6 @@ class Settings:
         self.openai_api_key = os.getenv("OPENAI_API_KEY", "")
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY", "")
         self.llm_model_script = os.getenv("LLM_MODEL_SCRIPT", "gpt-5.5")
-        self.llm_model_select = os.getenv("LLM_MODEL_SELECT", "gpt-5-nano")
         self.tts_model = os.getenv("TTS_MODEL", "eleven_multilingual_v2")
         self.tts_voice_a = os.getenv("TTS_VOICE_A", "21m00Tcm4TlvDq8ikWAM")
         self.elevenlabs_rate_usd_per_1k = _f("ELEVENLABS_RATE_USD_PER_1K", 0.10)

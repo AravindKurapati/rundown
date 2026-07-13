@@ -16,7 +16,6 @@ class Preferences(SQLModel, table=True):
     voice_a: str = "21m00Tcm4TlvDq8ikWAM"  # ElevenLabs premade "Rachel"
     voice_b: str = "ErXwobaYiN019PkySvjV"  # ElevenLabs premade "Antoni"
     tts_model: str = "eleven_multilingual_v2"
-    llm_model_select: str = "gpt-5-nano"
     llm_model_script: str = "gpt-5.5"
     schedule_cadence: str = "daily"
     schedule_time: str = "07:00"

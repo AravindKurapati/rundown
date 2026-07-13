@@ -1,14 +1,18 @@
 from openai import OpenAI
-from tenacity import retry, stop_after_attempt, wait_exponential
 from app.config import settings
 from app.adapters.base import LLMResult
+from app.adapters.retry import transient_retry
+
+# Bounded per-request timeout so a hung call fails instead of blocking a run
+# indefinitely; comfortably above the slowest observed script generation.
+_TIMEOUT_S = 120.0
 
 
 class OpenAIClient:
     def __init__(self):
-        self._c = OpenAI(api_key=settings.openai_api_key)
+        self._c = OpenAI(api_key=settings.openai_api_key, timeout=_TIMEOUT_S)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=8))
+    @transient_retry
     def complete(self, system: str, user: str, model: str) -> LLMResult:
         resp = self._c.chat.completions.create(
             model=model,

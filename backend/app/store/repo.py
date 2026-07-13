@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from sqlmodel import select
 from app.store.db import get_session
 from app.store.models import Preferences, Episode, GenerationEvent
@@ -8,6 +8,12 @@ from app.store.models import Preferences, Episode, GenerationEvent
 # also stops a full GET-then-PUT round-trip from feeding the serialized
 # updated_at string back into a datetime column.
 _PREFS_READONLY = {"id", "updated_at"}
+
+# A "generating" row older than this is treated as an abandoned run (the process
+# crashed before it could mark itself failed). Real runs finish in a few minutes;
+# this cutoff sits well beyond the slowest observed run so it never trips a live
+# generation, only a dead one.
+STALE_GENERATION_AFTER = timedelta(minutes=15)
 
 
 def get_preferences() -> Preferences:
@@ -70,6 +76,25 @@ def add_event(episode_id: int, stage: str, **kw) -> GenerationEvent:
 
 
 def active_generation_exists() -> bool:
+    """True only if a *fresh* generation is running. A 'generating' row older than
+    STALE_GENERATION_AFTER is reclaimed (marked failed) rather than treated as a
+    live run, so a crashed generation can't lock the endpoint behind a permanent
+    409. Reconciliation is lazy: it happens the next time anyone asks."""
+    cutoff = datetime.now(timezone.utc) - STALE_GENERATION_AFTER
     with get_session() as s:
-        rows = s.exec(select(Episode).where(Episode.status == "generating")).all()
-        return len(rows) > 0
+        rows = list(s.exec(select(Episode).where(Episode.status == "generating")))
+        fresh = False
+        for ep in rows:
+            created = ep.created_at
+            # SQLite hands datetimes back naive; treat a naive value as the UTC we
+            # stored so the comparison stays honest across the tz boundary.
+            if created is not None and created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            if created is None or created < cutoff:
+                ep.status = "failed"
+                ep.error = ep.error or "generation abandoned (stale lease reclaimed)"
+                s.add(ep)
+            else:
+                fresh = True
+        s.commit()
+        return fresh

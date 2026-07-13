@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.store import repo
 from app.store.metrics import next_run
+from app.api.schemas import ScheduleUpdate
 
 router = APIRouter(prefix="/api")
 
@@ -13,8 +14,8 @@ def get_schedule():
 
 
 @router.put("/schedule")
-def put_schedule(body: dict):
+def put_schedule(body: ScheduleUpdate):
     repo.save_preferences({
-        "schedule_cadence": body["cadence"], "schedule_time": body["time"], "timezone": body["timezone"],
+        "schedule_cadence": body.cadence, "schedule_time": body.time, "timezone": body.timezone,
     })
     return get_schedule()

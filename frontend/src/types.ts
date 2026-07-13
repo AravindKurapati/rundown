@@ -1,6 +1,6 @@
 export interface Preferences {
   interests_json: string; tone: string; target_minutes: number; host_mode: string;
-  voice_a: string; voice_b: string; tts_model: string; llm_model_select: string;
+  voice_a: string; voice_b: string; tts_model: string;
   llm_model_script: string; schedule_cadence: string; schedule_time: string;
   timezone: string; budget_cap_usd: number;
 }

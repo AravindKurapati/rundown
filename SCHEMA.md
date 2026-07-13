@@ -14,12 +14,11 @@ Singleton table storing application settings (id=1, created on init).
 | voice_a | str | "21m00Tcm4TlvDq8ikWAM" | Primary ElevenLabs voice ID (premade "Rachel") |
 | voice_b | str | "ErXwobaYiN019PkySvjV" | Secondary ElevenLabs voice ID (premade "Antoni") |
 | tts_model | str | "eleven_multilingual_v2" | TTS model identifier |
-| llm_model_select | str | "gpt-5-nano" | Model for story selection |
 | llm_model_script | str | "gpt-5.5" | Model for script generation |
-| schedule_cadence | str | "daily" | Generation schedule (daily, weekly, etc.) |
-| schedule_time | str | "07:00" | Scheduled generation time (HH:MM) |
-| timezone | str | "America/New_York" | User timezone |
-| budget_cap_usd | float | 20.0 | Monthly budget cap in USD |
+| schedule_cadence | str | "daily" | Generation schedule; validated to daily or weekly |
+| schedule_time | str | "07:00" | Scheduled generation time (HH:MM, validated) |
+| timezone | str | "America/New_York" | User timezone (validated IANA name) |
+| budget_cap_usd | float | 20.0 | Total committed-spend cap in USD (sum of ready-episode cost; not a per-period reset) |
 | updated_at | datetime | now(UTC) | Last update timestamp (tz-aware UTC) |
 
 ## episodes

@@ -75,7 +75,26 @@ def get_ep(episode_id: int):
     ep = repo.get_episode(episode_id)
     if ep is None:
         return JSONResponse(status_code=404, content={"error": {"code": "not_found", "message": "no such episode"}})
-    return ep
+    # Explicit projection: never surface mp3_path (an internal filesystem path).
+    # The audio is served through GET /episodes/{id}/audio instead.
+    return {
+        "id": ep.id,
+        "title": ep.title,
+        "status": ep.status,
+        "created_at": ep.created_at.isoformat() if ep.created_at else None,
+        "completed_at": ep.completed_at.isoformat() if ep.completed_at else None,
+        "transcript_json": ep.transcript_json,
+        "duration_seconds": ep.duration_seconds,
+        "word_count": ep.word_count,
+        "tts_characters": ep.tts_characters,
+        "openai_tokens": ep.openai_tokens,
+        "est_cost_usd": ep.est_cost_usd,
+        "latency_ms": ep.latency_ms,
+        "host_mode": ep.host_mode,
+        "source_count": ep.source_count,
+        "topics_json": ep.topics_json,
+        "error": ep.error,
+    }
 
 
 @router.get("/episodes/{episode_id}/audio")
