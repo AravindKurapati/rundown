@@ -7,6 +7,7 @@ interface AudioPlayerProps {
   seed: number;
   durationHint?: number | null;
   date?: string | null;
+  onProgress?: (current: number, duration: number) => void;
 }
 
 const RATES = [1, 1.25, 1.5, 2];
@@ -29,17 +30,25 @@ function fmtDate(iso?: string | null): string {
 
 // Designed player, styled as an on-air deck: generative cover + Anton title +
 // mono readouts + transport controls. Wraps a hidden native <audio>.
-export default function AudioPlayer({ src, title, seed, durationHint, date }: AudioPlayerProps) {
+export default function AudioPlayer({ src, title, seed, durationHint, date, onProgress }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [cur, setCur] = useState(0);
   const [dur, setDur] = useState(0);
   const [rate, setRate] = useState(1);
 
+  // Keep the latest callback in a ref so the (src-scoped) listener effect always
+  // calls the current one without re-subscribing on every render.
+  const onProgressRef = useRef(onProgress);
+  onProgressRef.current = onProgress;
+
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    const onTime = () => setCur(el.currentTime);
+    const onTime = () => {
+      setCur(el.currentTime);
+      onProgressRef.current?.(el.currentTime, el.duration || 0);
+    };
     const onMeta = () => setDur(el.duration);
     const onEnd = () => setPlaying(false);
     el.addEventListener("timeupdate", onTime);
