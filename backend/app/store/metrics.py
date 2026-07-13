@@ -17,9 +17,12 @@ class BudgetExceeded(Exception):
 
 
 def total_spent_usd() -> float:
-    """Committed spend so far: sum of est_cost_usd over ready episodes."""
+    """Money the cap governs: est_cost_usd over ready episodes plus the LLM spend
+    already incurred by failed runs (a run that died after writing its script
+    still cost real OpenAI tokens). Failed runs before the script recorded no
+    cost, so they contribute nothing."""
     with get_session() as s:
-        eps = list(s.exec(select(Episode).where(Episode.status == "ready")))
+        eps = list(s.exec(select(Episode).where(Episode.status.in_(("ready", "failed")))))
     return sum(e.est_cost_usd or 0.0 for e in eps)
 
 
@@ -36,7 +39,9 @@ def overview() -> dict:
     success = (len(ready) / len(done)) if done else 0.0
     latencies = [e.latency_ms for e in ready if e.latency_ms]
     chars = sum(e.tts_characters or 0 for e in ready)
-    cost = round(sum(e.est_cost_usd or 0 for e in ready), 2)
+    # Cost tracks the budget basis (ready + failed LLM spend), so the dashboard
+    # meter reports exactly what the gate enforces rather than delivered-only cost.
+    cost = round(total_spent_usd(), 2)
     cap = settings.budget_cap_usd
     return {
         "episodes": len(eps),

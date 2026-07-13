@@ -8,6 +8,36 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
+class EpisodeSummaryOut(BaseModel):
+    """Row shape for GET /episodes."""
+    id: int
+    title: str
+    status: str
+    created_at: str
+    duration_seconds: Optional[int] = None
+
+
+class EpisodeDetailOut(BaseModel):
+    """GET /episodes/{id}. Deliberately omits mp3_path (internal filesystem path);
+    audio is served from GET /episodes/{id}/audio."""
+    id: int
+    title: str
+    status: str
+    created_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    transcript_json: Optional[str] = None
+    duration_seconds: Optional[int] = None
+    word_count: Optional[int] = None
+    tts_characters: Optional[int] = None
+    openai_tokens: Optional[int] = None
+    est_cost_usd: Optional[float] = None
+    latency_ms: Optional[int] = None
+    host_mode: str
+    source_count: Optional[int] = None
+    topics_json: Optional[str] = None
+    error: Optional[str] = None
+
+
 def _validate_timezone(v: str) -> str:
     try:
         ZoneInfo(v)

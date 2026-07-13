@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from app.config import settings
 from app.store import repo, metrics
 from app.api.voices import voice_name_for
+from app.api.schemas import EpisodeSummaryOut, EpisodeDetailOut
 from app.pipeline.generator import generate_episode
 from app.clients import get_clients
 
@@ -61,7 +62,7 @@ def generate(background: BackgroundTasks):
     return {"episode_id": ep.id, "status": "generating"}
 
 
-@router.get("/episodes")
+@router.get("/episodes", response_model=list[EpisodeSummaryOut])
 def list_eps():
     return [
         {"id": e.id, "title": e.title, "status": e.status,
@@ -70,7 +71,7 @@ def list_eps():
     ]
 
 
-@router.get("/episodes/{episode_id}")
+@router.get("/episodes/{episode_id}", response_model=EpisodeDetailOut)
 def get_ep(episode_id: int):
     ep = repo.get_episode(episode_id)
     if ep is None:

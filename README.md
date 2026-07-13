@@ -87,7 +87,7 @@ The schedule cadence and time you set in the Studio are saved as preferences and
 ## Design decisions
 
 - **One LLM call selects and writes.** The model that picks the stories is the model shaping the narrative, so pacing is coherent and cost is one call, not five.
-- **Premium where it is heard, cheap where it is invisible.** A quality voice and a capable model for the script; the small model tier for the selection reasoning the listener never hears. All model ids and rates are configurable in `.env`.
+- **Premium where it is heard, free where it is not.** One capable model does the editorial work (select and write) in a single paid call, and a quality ElevenLabs voice renders it; gather and dedupe are deterministic and free. All model ids and rates are configurable in `.env`.
 - **Fake LLM and TTS adapters behind the same interfaces.** Dev, tests, and CI cost nothing and never flake on the network. The fake TTS records its calls, so a test can assert the load-bearing property: exactly one synthesis call per episode.
 - **Scheduling is persisted config plus a headless CLI**, not an in-process scheduler with restart and duplicate-run problems.
 - **SQLite and local MP3 files.** The right size for one listener on one machine. The engine reads a `DATABASE_URL`, so Postgres is a connection string away (plus a driver and migrations); object storage stays documented, not built.

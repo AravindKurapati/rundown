@@ -31,6 +31,9 @@ def _stage(episode_id, name, fn):
 
 def generate_episode(episode_id, source, llm, tts, prefs):
     t0 = time.perf_counter()
+    # Track the script outside the try so the failure path can bill the LLM spend
+    # it already incurred if a later stage (budget gate, narrate, audio) fails.
+    script = None
     try:
         # Parse inside the try so malformed preferences persist as a failed run
         # rather than crashing the caller with an uncaught error.
@@ -76,7 +79,15 @@ def generate_episode(episode_id, source, llm, tts, prefs):
             topics_json=json.dumps(interests),
         )
     except Exception as e:  # noqa: BLE001
+        # A run that got past the script stage already spent OpenAI tokens, even
+        # though it produced no episode. Record that LLM-only cost (tts_chars=0)
+        # so the budget cap accounts for it; TTS is billed per completed
+        # synthesis, which a failed run never got. Failures before the script
+        # (gather/dedupe/bad prefs) spent nothing and record no cost.
+        llm_cost = episode_cost(0, script.tokens_in, script.tokens_out) if script else None
+        tokens = (script.tokens_in + script.tokens_out) if script else None
         return repo.update_episode(
             episode_id, status="failed", error=str(e),
+            est_cost_usd=llm_cost, openai_tokens=tokens,
             latency_ms=int((time.perf_counter() - t0) * 1000),
         )

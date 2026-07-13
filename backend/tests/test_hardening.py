@@ -62,6 +62,16 @@ def test_put_schedule_bad_cadence_is_422(tmp_path, monkeypatch):
     assert r.status_code == 422
 
 
+def test_validation_error_uses_the_coded_envelope(tmp_path, monkeypatch):
+    # 422s come back in the same {"error": {"code", "message"}} shape as the
+    # domain 404/409 errors, not FastAPI's default {"detail": [...]}.
+    c = _client(tmp_path, monkeypatch)
+    body = c.put("/api/schedule", json={}).json()
+    assert body["error"]["code"] == "invalid_request"
+    assert "fields" in body["error"]
+    assert "detail" not in body
+
+
 def test_put_schedule_valid_still_works(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     r = c.put("/api/schedule", json={"cadence": "weekly", "time": "06:30", "timezone": "America/New_York"})
