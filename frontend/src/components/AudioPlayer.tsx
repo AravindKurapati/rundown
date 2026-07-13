@@ -105,7 +105,7 @@ export default function AudioPlayer({ src, title, seed, durationHint, date }: Au
           </div>
 
           <div className="mt-2 flex items-start justify-between gap-3">
-            <h3 className="wordmark min-w-0 truncate text-2xl leading-none text-ink sm:text-[28px]">
+            <h3 className="wordmark min-w-0 truncate pb-0.5 text-2xl leading-tight text-ink sm:text-[28px]">
               {title}
             </h3>
             {playing && (
