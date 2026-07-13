@@ -7,7 +7,7 @@ that LLM spend was invisible to the cap.
 from app.store import db as dbmod, repo, metrics
 from app.store.metrics import episode_cost
 from app.adapters.base import LLMResult
-from app.adapters.fakes import FakeLLMClient
+from app.adapters.fakes import FakeLLMClient, FakeTTSClient
 from app.sources.base import Article
 from app.pipeline.generator import generate_episode
 
@@ -85,6 +85,26 @@ def test_failed_after_script_records_llm_only_cost(tmp_path, monkeypatch):
     assert out.openai_tokens == 3000
     assert not (tmp_path / f"{ep.id}.mp3").exists()
     # And that spend is now visible to the cap.
+    assert metrics.total_spent_usd() == out.est_cost_usd
+
+
+def test_failed_after_narrate_bills_the_tts_too(tmp_path, monkeypatch):
+    _db(tmp_path, monkeypatch)
+    # Point audio_dir at a directory that does not exist, so the MP3 write fails
+    # AFTER narration (TTS) has already succeeded and been billed by the provider.
+    monkeypatch.setattr("app.config.settings.audio_dir", tmp_path / "does-not-exist")
+    prefs = repo.get_preferences()
+    ep = repo.create_episode(status="generating", host_mode="single")
+
+    out = generate_episode(ep.id, FakeSource(), FixedTokenLLM(), FakeTTSClient(), prefs)
+
+    assert out.status == "failed"
+    assert not (tmp_path / f"{ep.id}.mp3").exists()
+    # The synthesized characters are recorded, and the cost includes them, not
+    # just the LLM tokens.
+    assert out.tts_characters and out.tts_characters > 0
+    assert out.est_cost_usd == episode_cost(out.tts_characters, 2000, 1000)
+    assert out.est_cost_usd > episode_cost(0, 2000, 1000)  # strictly more than LLM-only
     assert metrics.total_spent_usd() == out.est_cost_usd
 
 

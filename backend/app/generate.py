@@ -7,6 +7,12 @@ from app.pipeline.generator import generate_episode
 
 def run_once() -> int:
     init_db()
+    # Share the API's single-flight guard: if a run is already in flight (and not
+    # a stale, reclaimable lease), a cron-triggered run must not start a second
+    # one and double-spend.
+    if repo.active_generation_exists():
+        print("a generation is already running; skipping")
+        return -1
     prefs = repo.get_preferences()
     ep = repo.create_episode(status="generating", host_mode=prefs.host_mode)
     source, llm, tts = get_clients()
