@@ -3,7 +3,6 @@ import { api } from "../api/client";
 import type { EpisodeSummary, Estimate, Preferences } from "../types";
 import PreferencesForm from "../components/PreferencesForm";
 import EpisodeLibrary from "../components/EpisodeLibrary";
-import EpisodeCover from "../components/EpisodeCover";
 import heroImg from "../assets/hero.jpg";
 
 const STAGE_PHRASES = [
@@ -96,11 +95,6 @@ export default function Studio() {
     return () => clearInterval(id);
   }, [busy]);
 
-  function openEpisode(id: number) {
-    setAutoExpandId(id);
-    libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   async function openConfirm() {
     setStatusMessage(null);
     try {
@@ -144,7 +138,6 @@ export default function Studio() {
   }
 
   const hasEpisodes = episodes.length > 0;
-  const readyEpisodes = episodes.filter((e) => e.status === "ready");
 
   return (
     <div className="pb-16">
@@ -257,51 +250,29 @@ export default function Studio() {
         </div>
       </section>
 
-      {/* ---- everything below sits on the normal page ground ---- */}
-      <div className="mx-auto max-w-5xl px-5 sm:px-6">
-        {/* ---- recent covers band ---- */}
-      {readyEpisodes.length > 0 && (
-        <section className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {readyEpisodes.slice(0, 4).map((ep) => (
-            <button
-              key={ep.id}
-              type="button"
-              onClick={() => openEpisode(ep.id)}
-              className="group text-left"
-            >
-              <EpisodeCover
-                seed={ep.id}
-                live={ep.status === "generating"}
-                className="aspect-square w-full rounded-2xl transition-transform group-hover:-translate-y-1"
-              />
-              <p className="mt-2 truncate text-sm font-semibold text-ink">
-                {ep.title || `Episode ${ep.id}`}
-              </p>
-            </button>
-          ))}
+      {/* ---- console: settings on the left, the archive on the right, so the
+             width is actually used instead of a lonely centered column ---- */}
+      <div className="mx-auto mt-12 grid max-w-6xl gap-8 px-5 sm:px-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
+        {/* ---- studio settings ---- */}
+        <section>
+          <div className="mb-4 flex items-center gap-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">
+              On the air today
+            </p>
+            <span className="h-px flex-1 bg-line" />
+          </div>
+          <PreferencesForm
+            onSaved={() => {
+              setRefreshToken((t) => t + 1);
+              setStatusMessage({ tone: "ready", text: SAVED_MESSAGE });
+              heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
         </section>
-      )}
 
-      {/* ---- studio settings ---- */}
-      <section className="mt-14">
-        <div className="mb-4 flex items-center gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">
-            On the air today
-          </p>
-          <span className="h-px flex-1 bg-line" />
-        </div>
-        <PreferencesForm
-          onSaved={() => {
-            setRefreshToken((t) => t + 1);
-            setStatusMessage({ tone: "ready", text: SAVED_MESSAGE });
-            heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-        />
-      </section>
-
-      <section ref={libraryRef} className="mt-12 scroll-mt-24">
-        <EpisodeLibrary refreshToken={refreshToken} autoExpandId={autoExpandId} />
-      </section>
+        <section ref={libraryRef} className="scroll-mt-24 xl:sticky xl:top-20">
+          <EpisodeLibrary refreshToken={refreshToken} autoExpandId={autoExpandId} />
+        </section>
       </div>
     </div>
   );
