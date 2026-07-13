@@ -17,6 +17,7 @@ const BUSY_REFUSAL = "One at a time: an episode is already in the works.";
 const GENERATION_ERROR =
   "That episode didn't make it. Your settings are safe, so give it another try in a moment.";
 const READY_MESSAGE = "Today's episode is ready. Headphones on.";
+const SAVED_MESSAGE = "Settings saved. Make today's episode when you're ready.";
 const EMPTY_STATE =
   "No episodes yet. Pick your interests below and press the button; the first one is the hardest, and it's one click.";
 
@@ -64,6 +65,7 @@ export default function Studio() {
   const [confirming, setConfirming] = useState(false);
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const libraryRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void (async () => {
@@ -147,7 +149,10 @@ export default function Studio() {
   return (
     <div className="pb-16">
       {/* ---- full-bleed photo hero ---- */}
-      <section className="rise hero-photo relative mx-3 mt-4 overflow-hidden rounded-3xl sm:mx-6">
+      <section
+        ref={heroRef}
+        className="rise hero-photo relative mx-3 mt-4 overflow-hidden rounded-3xl sm:mx-6 scroll-mt-20"
+      >
         <img
           src={heroImg}
           alt="A listener with headphones looking out over the water toward the city"
@@ -164,7 +169,7 @@ export default function Studio() {
             RUNDOWN
           </h1>
           <p className="mt-4 max-w-lg text-lg text-[#efe4d4]/90 sm:text-xl">
-            Your day, in five minutes. The stories you care about, read aloud.
+            Your daily briefing, in minutes not hours. The stories you care about, read aloud.
           </p>
 
           {topics.length > 0 && (
@@ -285,7 +290,13 @@ export default function Studio() {
           </p>
           <span className="h-px flex-1 bg-line" />
         </div>
-        <PreferencesForm onSaved={() => setRefreshToken((t) => t + 1)} />
+        <PreferencesForm
+          onSaved={() => {
+            setRefreshToken((t) => t + 1);
+            setStatusMessage({ tone: "ready", text: SAVED_MESSAGE });
+            heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+        />
       </section>
 
       <section ref={libraryRef} className="mt-12 scroll-mt-24">

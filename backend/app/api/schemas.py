@@ -7,9 +7,11 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-# Sane ceiling on requested episode length. Matches the max the Studio UI offers
-# (180 minutes / 3 hours), so the client can't submit a value the API rejects.
-MAX_TARGET_MINUTES = 180
+# Ceiling on requested episode length. The pipeline narrates a whole episode in a
+# single ElevenLabs call (no chunking/stitching), which caps a script at roughly
+# 10k characters, about 10 minutes. Bounding here keeps the UI from offering a
+# length the one-call design cannot render (which would fail at narration).
+MAX_TARGET_MINUTES = 10
 
 
 class EpisodeSummaryOut(BaseModel):

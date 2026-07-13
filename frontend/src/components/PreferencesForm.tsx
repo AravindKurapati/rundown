@@ -12,8 +12,6 @@ interface ScheduleInfo {
   next_run: string;
 }
 
-type DurationUnit = "minutes" | "hours";
-
 const PRESET_TOPICS = [
   "AI",
   "Startups",
@@ -45,6 +43,15 @@ const TONE_PRESETS = [
   "Serious & factual",
 ];
 
+// Length is a product choice, not a raw number. A briefing tops out around ten
+// minutes because the whole episode is one TTS call (no chunking); presets make
+// that legible and a custom field allows fine control within the ceiling.
+const MAX_MINUTES = 10;
+const LENGTH_PRESETS = [
+  { label: "Brief", minutes: 5, note: "quick rundown" },
+  { label: "Standard", minutes: 10, note: "fuller briefing" },
+];
+
 const inputClass =
   "w-full rounded-lg border border-line bg-bg text-ink px-3 py-2 text-sm placeholder:text-faint focus:border-amber focus:outline-none";
 const labelClass =
@@ -73,7 +80,6 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
   const [customTopic, setCustomTopic] = useState("");
   const [customTone, setCustomTone] = useState(false);
   const [durValue, setDurValue] = useState(5);
-  const [durUnit, setDurUnit] = useState<DurationUnit>("minutes");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -85,15 +91,7 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
     const loaded = (await api.getPreferences()) as Preferences;
     setPrefs(loaded);
     setTopics(parseTopics(loaded.interests_json));
-    // A non-preset tone shows as a "Current tone" option in the dropdown (like
-    // the voice picker), rather than forcing the free-text field open.
-    if (loaded.target_minutes >= 60 && loaded.target_minutes % 60 === 0) {
-      setDurUnit("hours");
-      setDurValue(loaded.target_minutes / 60);
-    } else {
-      setDurUnit("minutes");
-      setDurValue(loaded.target_minutes);
-    }
+    setDurValue(Math.min(MAX_MINUTES, Math.max(1, loaded.target_minutes)));
     const sched = (await api.getSchedule()) as ScheduleInfo;
     setSchedule(sched);
     const vs = (await api.listVoices()) as { voices: Voice[] };
@@ -133,10 +131,10 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
     setSaved(false);
   }
 
-  function setDuration(value: number, unit: DurationUnit) {
-    setDurValue(value);
-    setDurUnit(unit);
-    update("target_minutes", unit === "hours" ? Math.round(value * 60) : Math.round(value));
+  function setDuration(minutes: number) {
+    const m = Math.min(MAX_MINUTES, Math.max(1, Math.round(minutes || 1)));
+    setDurValue(m);
+    update("target_minutes", m);
   }
 
   async function onSave() {
@@ -262,31 +260,46 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
           </button>
         </div>
 
-        {/* how long — number + unit */}
+        {/* how long — a briefing length, not a raw number */}
         <div>
           <label htmlFor="target_minutes" className={labelClass}>
             How long
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {LENGTH_PRESETS.map((p) => {
+              const active = durValue === p.minutes;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => setDuration(p.minutes)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                    active
+                      ? "border-amber bg-bg3 text-ink"
+                      : "border-line text-muted hover:border-amber hover:text-ink"
+                  }`}
+                >
+                  {p.label}
+                  <span className="ml-1.5 font-mono text-xs text-faint">{p.minutes}m</span>
+                </button>
+              );
+            })}
+            <span className="mx-1 text-xs text-faint">or</span>
             <input
               id="target_minutes"
               type="number"
               min={1}
-              max={durUnit === "hours" ? 3 : 180}
+              max={MAX_MINUTES}
               value={durValue}
-              onChange={(e) => setDuration(Number(e.target.value), durUnit)}
-              className={`${inputClass} w-24`}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className={`${inputClass} w-20`}
+              aria-label="Custom length in minutes"
             />
-            <select
-              value={durUnit}
-              onChange={(e) => setDuration(durValue, e.target.value as DurationUnit)}
-              className={`${inputClass} w-32`}
-              aria-label="Length unit"
-            >
-              <option value="minutes">minutes</option>
-              <option value="hours">hours</option>
-            </select>
+            <span className="text-sm text-muted">min</span>
           </div>
+          <p className="mt-1.5 text-xs text-faint">
+            A briefing, not an hour-long podcast. Up to {MAX_MINUTES} minutes.
+          </p>
         </div>
 
         {/* the voice — named dropdown + custom id */}
