@@ -2,10 +2,14 @@
 input into a 422 with a field-level message instead of a 500 from a KeyError or
 a ZoneInfo lookup deep in the handler.
 """
-from typing import Optional
+from typing import Literal, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, field_validator
+
+# Sane ceiling on requested episode length. Matches the max the Studio UI offers
+# (180 minutes / 3 hours), so the client can't submit a value the API rejects.
+MAX_TARGET_MINUTES = 180
 
 
 class EpisodeSummaryOut(BaseModel):
@@ -82,7 +86,8 @@ class PreferencesUpdate(BaseModel):
     interests_json: Optional[str] = None
     tone: Optional[str] = None
     target_minutes: Optional[int] = None
-    host_mode: Optional[str] = None
+    # Only single-host ships; reject an unsupported mode rather than persist it.
+    host_mode: Optional[Literal["single"]] = None
     voice_a: Optional[str] = None
     voice_b: Optional[str] = None
     tts_model: Optional[str] = None
@@ -90,20 +95,12 @@ class PreferencesUpdate(BaseModel):
     schedule_cadence: Optional[str] = None
     schedule_time: Optional[str] = None
     timezone: Optional[str] = None
-    budget_cap_usd: Optional[float] = None
 
     @field_validator("target_minutes")
     @classmethod
     def _minutes(cls, v: Optional[int]) -> Optional[int]:
-        if v is not None and v <= 0:
-            raise ValueError("target_minutes must be positive")
-        return v
-
-    @field_validator("budget_cap_usd")
-    @classmethod
-    def _cap(cls, v: Optional[float]) -> Optional[float]:
-        if v is not None and v <= 0:
-            raise ValueError("budget_cap_usd must be positive")
+        if v is not None and not (1 <= v <= MAX_TARGET_MINUTES):
+            raise ValueError(f"target_minutes must be between 1 and {MAX_TARGET_MINUTES}")
         return v
 
     @field_validator("schedule_cadence")

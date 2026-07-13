@@ -18,8 +18,9 @@ Singleton table storing application settings (id=1, created on init).
 | schedule_cadence | str | "daily" | Generation schedule; validated to daily or weekly |
 | schedule_time | str | "07:00" | Scheduled generation time (HH:MM, validated) |
 | timezone | str | "America/New_York" | User timezone (validated IANA name) |
-| budget_cap_usd | float | 20.0 | Total committed-spend cap in USD (sum of ready-episode cost; not a per-period reset) |
 | updated_at | datetime | now(UTC) | Last update timestamp (tz-aware UTC) |
+
+The budget cap is an operator guardrail, not a preference: it lives in env config as `settings.budget_cap_usd` (default 20.0) and is the single source of truth for the budget gate, the estimate, and the dashboard. It is not stored per-user and not user-editable.
 
 ## episodes
 

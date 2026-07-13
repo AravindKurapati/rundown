@@ -20,7 +20,9 @@ class Preferences(SQLModel, table=True):
     schedule_cadence: str = "daily"
     schedule_time: str = "07:00"
     timezone: str = "America/New_York"
-    budget_cap_usd: float = 20.0
+    # NOTE: the budget cap is an operator guardrail, not a user preference. It
+    # lives in env config (settings.budget_cap_usd) as the single source of truth
+    # for enforcement; it is intentionally not stored here or user-editable.
     updated_at: datetime = Field(default_factory=_utcnow)
 
 

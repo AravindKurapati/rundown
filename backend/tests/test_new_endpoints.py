@@ -42,6 +42,15 @@ def test_estimate_parses_topics_and_survives_bad_json(tmp_path, monkeypatch):
     assert c.get("/api/episodes/estimate").json()["topics"] == []
 
 
+def test_budget_cap_is_env_only_not_a_preference(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    # The cap is an operator guardrail: it is not stored on / editable via prefs.
+    assert "budget_cap_usd" not in c.get("/api/preferences").json()
+    # It comes from env settings, and the estimate reports exactly that.
+    monkeypatch.setattr("app.config.settings.budget_cap_usd", 20.0)
+    assert c.get("/api/episodes/estimate").json()["budget_cap_usd"] == 20.0
+
+
 def test_estimate_flags_budget_overrun(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     monkeypatch.setattr("app.config.settings.budget_cap_usd", 100.0)

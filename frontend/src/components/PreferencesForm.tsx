@@ -272,6 +272,7 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
               id="target_minutes"
               type="number"
               min={1}
+              max={durUnit === "hours" ? 3 : 180}
               value={durValue}
               onChange={(e) => setDuration(Number(e.target.value), durUnit)}
               className={`${inputClass} w-24`}
@@ -341,7 +342,6 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
             className={inputClass}
           >
             <option value="daily">Daily</option>
-            <option value="weekdays">Weekdays</option>
             <option value="weekly">Weekly</option>
           </select>
           <input

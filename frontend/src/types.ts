@@ -2,7 +2,7 @@ export interface Preferences {
   interests_json: string; tone: string; target_minutes: number; host_mode: string;
   voice_a: string; voice_b: string; tts_model: string;
   llm_model_script: string; schedule_cadence: string; schedule_time: string;
-  timezone: string; budget_cap_usd: number;
+  timezone: string;
 }
 export interface Voice { id: string; name: string; description: string; }
 export interface EpisodeSummary { id: number; title: string; status: string; created_at: string; duration_seconds: number | null; }

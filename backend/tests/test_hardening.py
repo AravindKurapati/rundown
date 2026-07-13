@@ -86,6 +86,19 @@ def test_put_preferences_bad_target_minutes_is_422(tmp_path, monkeypatch):
     assert c.put("/api/preferences", json={"target_minutes": -3}).status_code == 422
 
 
+def test_put_preferences_rejects_oversized_minutes(tmp_path, monkeypatch):
+    # Upper bound matches the UI's max (180), so a client can't request a length
+    # the product won't produce.
+    c = _client(tmp_path, monkeypatch)
+    assert c.put("/api/preferences", json={"target_minutes": 500}).status_code == 422
+
+
+def test_put_preferences_rejects_unsupported_host_mode(tmp_path, monkeypatch):
+    # Only single-host ships; two-host must not be persistable.
+    c = _client(tmp_path, monkeypatch)
+    assert c.put("/api/preferences", json={"host_mode": "two"}).status_code == 422
+
+
 def test_put_preferences_roundtrip_ignores_readonly_keys(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     body = c.get("/api/preferences").json()
