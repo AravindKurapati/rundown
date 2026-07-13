@@ -137,7 +137,10 @@ export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLi
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="wordmark block truncate text-lg leading-tight text-ink">
+                    <span
+                      title={title}
+                      className="wordmark line-clamp-2 text-lg leading-tight text-ink"
+                    >
                       {title}
                     </span>
                     <span className="mt-1 block font-mono text-[11px] text-faint">
