@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { EpisodeSummary } from "../types";
+import EpisodeCover from "./EpisodeCover";
 import Player from "./Player";
 
 // Full episode detail returned by GET /episodes/{id}. types.ts only defines the
@@ -18,14 +19,25 @@ interface EpisodeLibraryProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  ready: "bg-green-100 text-green-800",
-  generating: "bg-blue-100 text-blue-800",
-  pending: "bg-gray-100 text-gray-700",
-  failed: "bg-red-100 text-red-800",
+  ready: "border-good text-good",
+  generating: "border-amber text-amber",
+  pending: "border-line text-muted",
+  failed: "border-air text-air",
 };
 
 function statusBadgeClass(status: string): string {
-  return STATUS_STYLES[status] ?? "bg-gray-100 text-gray-700";
+  return STATUS_STYLES[status] ?? "border-line text-muted";
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.round(seconds / 60)} min`;
+}
+
+function metaLine(ep: EpisodeSummary): string {
+  const date = ep.created_at ? new Date(ep.created_at).toLocaleDateString() : "";
+  const dur = ep.duration_seconds != null ? formatDuration(ep.duration_seconds) : null;
+  return [date, dur].filter(Boolean).join(" · ");
 }
 
 export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLibraryProps) {
@@ -73,42 +85,74 @@ export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLi
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-gray-900">Past episodes</h2>
+      <div className="mb-1 flex items-center gap-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">
+          Past episodes
+        </p>
+        <span className="h-px flex-1 bg-line" />
+      </div>
 
       {!loading && episodes.length === 0 && (
-        <p className="text-sm text-gray-500">Everything you make will pile up here.</p>
+        <p className="text-sm text-muted">Everything you make will pile up here.</p>
       )}
 
       {episodes.length > 0 && (
-        <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
-          {episodes.map((ep) => (
-            <li key={ep.id}>
-              <button
-                type="button"
-                onClick={() => void expand(ep.id)}
-                className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
+        <ul className="space-y-3">
+          {episodes.map((ep) => {
+            const title = ep.title || `Episode ${ep.id}`;
+            const open = expandedId === ep.id;
+            return (
+              <li
+                key={ep.id}
+                className="overflow-hidden rounded-2xl border border-line bg-bg2 transition-colors"
               >
-                <span className="text-sm font-medium text-gray-900">
-                  {ep.title || `Episode ${ep.id}`}
-                </span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(ep.status)}`}
+                <button
+                  type="button"
+                  onClick={() => void expand(ep.id)}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-4 p-3 text-left transition-colors hover:bg-bg3"
                 >
-                  {ep.status}
-                </span>
-              </button>
+                  <EpisodeCover
+                    seed={ep.id}
+                    live={ep.status === "generating"}
+                    className="h-14 w-14 flex-shrink-0 rounded-xl"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-ink">{title}</span>
+                    <span className="mt-0.5 block font-mono text-[11px] text-faint">
+                      {metaLine(ep)}
+                    </span>
+                  </span>
+                  <span
+                    className={`flex-shrink-0 rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wide ${statusBadgeClass(ep.status)}`}
+                  >
+                    {ep.status}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`flex-shrink-0 text-faint transition-transform ${open ? "rotate-180" : ""}`}
+                  >
+                    ⌄
+                  </span>
+                </button>
 
-              {expandedId === ep.id && (
-                <div className="border-t border-gray-100 px-4 py-4">
-                  {detail && detail.id === ep.id ? (
-                    <Player episodeId={ep.id} transcriptJson={detail.transcript_json} />
-                  ) : (
-                    <p className="text-sm text-gray-400">Loading...</p>
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
+                {open && (
+                  <div className="border-t border-line p-3 sm:p-4">
+                    {detail && detail.id === ep.id ? (
+                      <Player
+                        episodeId={ep.id}
+                        title={title}
+                        transcriptJson={detail.transcript_json}
+                        durationSeconds={ep.duration_seconds}
+                      />
+                    ) : (
+                      <p className="text-sm text-faint">Loading…</p>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

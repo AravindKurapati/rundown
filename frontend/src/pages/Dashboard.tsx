@@ -36,7 +36,7 @@ function mergeListeners(dauSeries: Point[], wauSeries: Point[]): ListenersPoint[
 
 function MockBadge() {
   return (
-    <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+    <span className="inline-flex items-center rounded-full border border-line bg-[var(--amber-soft)] px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wide text-amber">
       {MOCK_BADGE_TEXT}
     </span>
   );
@@ -60,16 +60,20 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10 px-6 py-8">
+    <div className="mx-auto max-w-3xl space-y-10 px-6 py-10">
       <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">{INTRO}</p>
+        <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">
+          <span className="live-dot" aria-hidden="true" />
+          Control room
+        </p>
+        <h1 className="wordmark text-5xl font-normal">THE NUMBERS</h1>
+        <p className="mt-2 max-w-xl text-sm text-muted">{INTRO}</p>
       </div>
 
-      {!overview && <p className="text-sm text-gray-500">Loading dashboard...</p>}
+      {!overview && <p className="font-mono text-sm text-muted">Loading dashboard…</p>}
 
       {overview && overview.episodes === 0 && (
-        <p className="text-sm text-gray-500">{EMPTY_STATE}</p>
+        <p className="text-sm text-muted">{EMPTY_STATE}</p>
       )}
 
       {overview && overview.episodes > 0 && (
@@ -102,28 +106,37 @@ export default function Dashboard() {
 
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold">Product analytics</h2>
+              <h2 className="text-lg font-bold text-ink">Product analytics</h2>
               <MockBadge />
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="rounded-2xl border border-line bg-bg2 p-6">
               <div className="mb-4 flex items-center gap-3">
-                <h3 className="text-sm font-medium text-gray-900">Daily and weekly listeners</h3>
+                <h3 className="text-sm font-semibold text-ink">Daily and weekly listeners</h3>
                 <MockBadge />
               </div>
               <div style={{ height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={listeners}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" />
+                    <YAxis tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--bg2)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 10,
+                        color: "var(--ink)",
+                      }}
+                      labelStyle={{ color: "var(--muted)" }}
+                      itemStyle={{ color: "var(--ink)" }}
+                    />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="dau"
                       name="Daily active"
-                      stroke="#d97706"
+                      stroke="var(--amber)"
                       strokeDasharray="4 4"
                       dot={false}
                     />
@@ -131,7 +144,7 @@ export default function Dashboard() {
                       type="monotone"
                       dataKey="wau"
                       name="Weekly active"
-                      stroke="#92400e"
+                      stroke="var(--good)"
                       strokeDasharray="4 4"
                       dot={false}
                     />
@@ -140,24 +153,33 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="rounded-2xl border border-line bg-bg2 p-6">
               <div className="mb-4 flex items-center gap-3">
-                <h3 className="text-sm font-medium text-gray-900">Listen-through rate</h3>
+                <h3 className="text-sm font-semibold text-ink">Listen-through rate</h3>
                 <MockBadge />
               </div>
               <div style={{ height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={ltrSeries}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" />
+                    <YAxis tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--bg2)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 10,
+                        color: "var(--ink)",
+                      }}
+                      labelStyle={{ color: "var(--muted)" }}
+                      itemStyle={{ color: "var(--ink)" }}
+                    />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="value"
                       name="Listen-through rate"
-                      stroke="#d97706"
+                      stroke="var(--amber)"
                       strokeDasharray="4 4"
                       dot={false}
                     />

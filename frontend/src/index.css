@@ -1,3 +1,250 @@
+/* Self-hosted faces (bundled, no CDN, no layout shift) */
+@import "@fontsource/anton/400.css";
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/public-sans/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   RUNDOWN · "The Station" design tokens
+   Dark ("dim booth") is primary; light ("daytime studio")
+   is a real second theme via [data-theme="light"].
+   ============================================================ */
+:root,
+:root[data-theme="dark"] {
+  --bg: #1e1812;
+  --bg2: #29211a;
+  --bg3: #33291f;
+  --ink: #f4ebde;
+  --muted: #b0a08f;
+  --faint: #7d7062;
+  --line: #3a2d22;
+  --air: #ee5a3d;
+  --amber: #f0b154;
+  --good: #57b98a;
+  --amber-soft: rgba(240, 177, 84, 0.16);
+  /* multi-accent system (vivid on the warm-dark ground) */
+  --coral: #f2603f;
+  --violet: #8a6bff;
+  --teal: #24bda2;
+  --gold: #f0a838;
+  --rose: #f0619a;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --glow: 0 0 22px rgba(238, 90, 61, 0.55);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f6f1e8;
+  --bg2: #fffdf8;
+  --bg3: #f1e9db;
+  --ink: #241c14;
+  --muted: #756855;
+  --faint: #9c8d78;
+  --line: #e5dccb;
+  --air: #cf3f27;
+  --amber: #b57715;
+  --good: #2f8a5f;
+  --amber-soft: rgba(181, 119, 21, 0.12);
+  /* multi-accent system (deepened for contrast on paper) */
+  --coral: #e0472b;
+  --violet: #6a4bd6;
+  --teal: #12907c;
+  --gold: #c67f16;
+  --rose: #d34d82;
+  --shadow: 0 18px 44px rgba(120, 95, 50, 0.16);
+  --glow: 0 0 18px rgba(207, 63, 39, 0.28);
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.35s ease, color 0.35s ease;
+  }
+  :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+}
+
+/* ---------- full-bleed photo hero ---------- */
+.hero-photo {
+  height: 74vh;
+  min-height: 480px;
+}
+.hero-scrim {
+  background:
+    linear-gradient(90deg, rgba(18, 14, 10, 0.92) 0%, rgba(18, 14, 10, 0.5) 46%, rgba(18, 14, 10, 0.08) 100%),
+    linear-gradient(0deg, rgba(18, 14, 10, 0.94) 0%, rgba(18, 14, 10, 0) 50%);
+}
+
+/* ---------- signature: wordmark ---------- */
+.wordmark {
+  font-family: "Anton", Impact, "Arial Narrow", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 0.85;
+}
+
+/* ---------- signature: ON AIR ---------- */
+.airpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: var(--air);
+  border: 1.5px solid var(--air);
+  border-radius: 999px;
+  padding: 8px 18px;
+}
+.airpill::before,
+.live-dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--air);
+  box-shadow: var(--glow);
+  animation: rd-pulse 2.4s ease-in-out infinite;
+}
+.live-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--air);
+}
+
+/* ---------- signature: waveform ---------- */
+.wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.wave span {
+  width: 5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--amber),
+    color-mix(in srgb, var(--amber) 40%, transparent)
+  );
+}
+.wave--live span {
+  animation: rd-bob 1.3s ease-in-out infinite;
+}
+
+/* ---------- player track ---------- */
+.track {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+  position: relative;
+}
+.track > i {
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 45%);
+  background: var(--amber);
+  border-radius: 999px;
+}
+
+/* ---------- generative cover waveform ---------- */
+.cover-wave--live rect {
+  animation: rd-bob 1.3s ease-in-out infinite;
+}
+
+/* ---------- designed player scrubber ---------- */
+.player-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--amber) var(--pct, 0%),
+    var(--line) var(--pct, 0%)
+  );
+  cursor: pointer;
+}
+.player-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--bg2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.player-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--bg2);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+@keyframes rd-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes rd-bob {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes rd-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rd-rise 0.6s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  .wave--live span,
+  .airpill::before,
+  .live-dot::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .wave span {
+    transform: none !important;
+  }
+}

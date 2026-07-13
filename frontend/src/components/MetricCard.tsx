@@ -5,17 +5,24 @@ interface MetricCardProps {
   warn?: boolean;
 }
 
+// Control-room readout: uppercase mono label over a large mono value, so the
+// numbers read like an instrument panel.
 export default function MetricCard({ label, value, sublabel, warn }: MetricCardProps) {
-  const cardClass = warn
-    ? "rounded-lg border border-red-300 bg-red-50 p-6"
-    : "rounded-lg border border-gray-200 bg-white p-6";
-  const valueClass = warn ? "text-2xl font-semibold text-red-700" : "text-2xl font-semibold";
-
   return (
-    <div className={cardClass}>
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className={valueClass}>{value}</p>
-      {sublabel && <p className="mt-1 text-xs text-gray-500">{sublabel}</p>}
+    <div
+      className={`rounded-xl border p-5 ${
+        warn ? "border-air bg-bg2" : "border-line bg-bg2"
+      }`}
+    >
+      <p className="font-mono text-[11px] uppercase tracking-[0.13em] text-faint">{label}</p>
+      <p
+        className={`mt-2.5 font-mono text-3xl font-medium tabular-nums ${
+          warn ? "text-air" : "text-ink"
+        }`}
+      >
+        {value}
+      </p>
+      {sublabel && <p className="mt-1 font-mono text-xs text-muted">{sublabel}</p>}
     </div>
   );
 }

@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
+import type { EpisodeSummary, Preferences } from "../types";
 import PreferencesForm from "../components/PreferencesForm";
 import EpisodeLibrary from "../components/EpisodeLibrary";
+import EpisodeCover from "../components/EpisodeCover";
+import heroImg from "../assets/hero.jpg";
 
 const STAGE_PHRASES = [
   "Rounding up today's news",
@@ -15,7 +18,17 @@ const GENERATION_ERROR =
   "That episode didn't make it. Your settings are safe, so give it another try in a moment.";
 const READY_MESSAGE = "Today's episode is ready. Headphones on.";
 const EMPTY_STATE =
-  "No episodes yet. Pick your interests above and press the button; the first one is the hardest, and it's one click.";
+  "No episodes yet. Pick your interests below and press the button; the first one is the hardest, and it's one click.";
+
+// Cycle topic chips through the multi-accent system so the palette reads
+// colorful, not monochrome.
+const CHIP_STYLES = [
+  "bg-coral text-white",
+  "bg-violet text-white",
+  "bg-teal text-[#08140f]",
+  "bg-gold text-[#1a1206]",
+  "bg-rose text-white",
+];
 
 type StatusTone = "ready" | "busy" | "error";
 interface StatusMessage {
@@ -24,9 +37,20 @@ interface StatusMessage {
 }
 
 function statusToneClass(tone: StatusTone): string {
-  if (tone === "ready") return "text-green-700";
-  if (tone === "busy") return "text-amber-700";
-  return "text-red-700";
+  if (tone === "ready") return "text-good";
+  if (tone === "busy") return "text-amber";
+  return "text-air";
+}
+
+function parseTopics(json: string | undefined): string[] {
+  if (!json) return [];
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (Array.isArray(parsed)) return parsed.map(String).slice(0, 5);
+  } catch {
+    // ignore
+  }
+  return [];
 }
 
 export default function Studio() {
@@ -35,12 +59,21 @@ export default function Studio() {
   const [stageIndex, setStageIndex] = useState(0);
   const [refreshToken, setRefreshToken] = useState(0);
   const [autoExpandId, setAutoExpandId] = useState<number | null>(null);
-  const [hasEpisodes, setHasEpisodes] = useState(true);
+  const [episodes, setEpisodes] = useState<EpisodeSummary[]>([]);
+  const [topics, setTopics] = useState<string[]>([]);
+  const libraryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void (async () => {
-      const list = (await api.listEpisodes()) as unknown[];
-      setHasEpisodes(list.length > 0);
+      const list = (await api.listEpisodes()) as EpisodeSummary[];
+      setEpisodes(list);
+    })();
+  }, [refreshToken]);
+
+  useEffect(() => {
+    void (async () => {
+      const prefs = (await api.getPreferences()) as Preferences;
+      setTopics(parseTopics(prefs.interests_json));
     })();
   }, [refreshToken]);
 
@@ -58,6 +91,11 @@ export default function Studio() {
     }, 2200);
     return () => clearInterval(id);
   }, [busy]);
+
+  function openEpisode(id: number) {
+    setAutoExpandId(id);
+    libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   async function onGenerate() {
     setBusy(true);
@@ -88,40 +126,114 @@ export default function Studio() {
     }
   }
 
+  const hasEpisodes = episodes.length > 0;
+  const readyEpisodes = episodes.filter((e) => e.status === "ready");
+
   return (
-    <div className="mx-auto max-w-3xl space-y-10 px-6 py-8">
-      <PreferencesForm />
+    <div className="pb-16">
+      {/* ---- full-bleed photo hero ---- */}
+      <section className="rise hero-photo relative mx-3 mt-4 overflow-hidden rounded-3xl sm:mx-6">
+        <img
+          src={heroImg}
+          alt="A listener with headphones looking out over the water toward the city"
+          className="absolute inset-0 h-full w-full object-cover object-[center_42%]"
+        />
+        <div className="hero-scrim absolute inset-0" />
+        <div className="absolute inset-0 z-10 mx-auto flex max-w-5xl flex-col justify-end p-6 sm:p-10">
+          <p className="mb-3 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-coral">
+            <span className="live-dot" aria-hidden="true" />
+            On air · today's briefing
+          </p>
 
-      <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
-        <button
-          type="button"
-          onClick={() => void onGenerate()}
-          disabled={busy}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {busy ? "Making your episode" : "Make today's episode"}
-        </button>
+          <h1 className="wordmark text-[clamp(60px,10vw,150px)] leading-[0.82] text-[#f5ede1]">
+            RUNDOWN
+          </h1>
+          <p className="mt-4 max-w-lg text-lg text-[#efe4d4]/90 sm:text-xl">
+            Your day, in five minutes. The stories you care about, read aloud.
+          </p>
 
-        {busy && (
-          <ul className="space-y-1 text-sm text-gray-500">
-            {STAGE_PHRASES.map((phrase, i) => (
-              <li key={phrase} className={i === stageIndex ? "font-medium text-gray-800" : ""}>
-                {phrase}
-              </li>
-            ))}
-          </ul>
-        )}
+          {topics.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              {topics.map((t, i) => (
+                <span
+                  key={t}
+                  className={`rounded-full px-4 py-1.5 text-sm font-bold ${CHIP_STYLES[i % CHIP_STYLES.length]}`}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
 
-        {!busy && statusMessage && (
-          <p className={`text-sm ${statusToneClass(statusMessage.tone)}`}>{statusMessage.text}</p>
-        )}
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              onClick={() => void onGenerate()}
+              disabled={busy}
+              className="inline-flex items-center gap-2.5 rounded-full bg-[#f5ede1] px-7 py-4 text-sm font-extrabold uppercase tracking-wide text-[#161009] transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+            >
+              <span aria-hidden="true">{busy ? "●" : "▸"}</span>
+              {busy ? "On air…" : "Make today's episode"}
+            </button>
 
-        {!busy && !statusMessage && !hasEpisodes && (
-          <p className="text-sm text-gray-500">{EMPTY_STATE}</p>
-        )}
+            {busy && (
+              <span className="font-mono text-sm text-[#efe4d4]/80">
+                {STAGE_PHRASES[stageIndex]}…
+              </span>
+            )}
+            {!busy && statusMessage && (
+              <span className={`text-sm font-semibold ${statusToneClass(statusMessage.tone)}`}>
+                {statusMessage.text}
+              </span>
+            )}
+          </div>
+
+          {!busy && !statusMessage && !hasEpisodes && (
+            <p className="mt-5 max-w-md text-sm text-[#efe4d4]/80">{EMPTY_STATE}</p>
+          )}
+        </div>
       </section>
 
-      <EpisodeLibrary refreshToken={refreshToken} autoExpandId={autoExpandId} />
+      {/* ---- everything below sits on the normal page ground ---- */}
+      <div className="mx-auto max-w-5xl px-5 sm:px-6">
+        {/* ---- recent covers band ---- */}
+      {readyEpisodes.length > 0 && (
+        <section className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {readyEpisodes.slice(0, 4).map((ep) => (
+            <button
+              key={ep.id}
+              type="button"
+              onClick={() => openEpisode(ep.id)}
+              className="group text-left"
+            >
+              <EpisodeCover
+                seed={ep.id}
+                live={ep.status === "generating"}
+                className="aspect-square w-full rounded-2xl transition-transform group-hover:-translate-y-1"
+              />
+              <p className="mt-2 truncate text-sm font-semibold text-ink">
+                {ep.title || `Episode ${ep.id}`}
+              </p>
+            </button>
+          ))}
+        </section>
+      )}
+
+      {/* ---- studio settings ---- */}
+      <section className="mt-14">
+        <div className="mb-4 flex items-center gap-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-faint">
+            On the air today
+          </p>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+        <PreferencesForm onSaved={() => setRefreshToken((t) => t + 1)} />
+      </section>
+
+      <section ref={libraryRef} className="mt-12 scroll-mt-24">
+        <EpisodeLibrary refreshToken={refreshToken} autoExpandId={autoExpandId} />
+      </section>
+      </div>
     </div>
   );
 }

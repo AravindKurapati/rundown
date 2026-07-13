@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.store.db import init_db
-from app.api import preferences, episodes, schedule, metrics
+from app.api import preferences, episodes, schedule, metrics, voices
 
 
 @asynccontextmanager
@@ -21,5 +21,5 @@ def health():
     return {"status": "ok"}
 
 
-for r in (preferences.router, episodes.router, schedule.router, metrics.router):
+for r in (preferences.router, episodes.router, schedule.router, metrics.router, voices.router):
     app.include_router(r)

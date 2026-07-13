@@ -8,6 +8,7 @@ export const api = {
   getEpisode: (id: number) => fetch(`${BASE}/episodes/${id}`).then(j),
   audioUrl: (id: number) => `${BASE}/episodes/${id}/audio`,
   getSchedule: () => fetch(`${BASE}/schedule`).then(j),
+  listVoices: () => fetch(`${BASE}/voices`).then(j),
   putSchedule: (b: unknown) => fetch(`${BASE}/schedule`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }).then(j),
   overview: () => fetch(`${BASE}/metrics/overview`).then(j),
   timeseries: (metric: string, days = 30) => fetch(`${BASE}/metrics/timeseries?metric=${metric}&days=${days}`).then(j),
