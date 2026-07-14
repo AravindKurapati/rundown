@@ -30,6 +30,9 @@ const CHIP_STYLES = [
   "bg-rose text-white",
 ];
 
+// A still, decorative waveform for the archive's summary end-cap.
+const WIRE_BARS = [28, 52, 38, 68, 46, 82, 54, 90, 60, 82, 46, 68, 38, 52, 28];
+
 type StatusTone = "ready" | "busy" | "error";
 interface StatusMessage {
   tone: StatusTone;
@@ -138,6 +141,10 @@ export default function Studio() {
   }
 
   const hasEpisodes = episodes.length > 0;
+  const readyEpisodes = episodes.filter((e) => e.status === "ready");
+  const minutesOnAir = Math.round(
+    readyEpisodes.reduce((sum, e) => sum + (e.duration_seconds || 0), 0) / 60
+  );
 
   return (
     <div className="pb-16">
@@ -252,7 +259,7 @@ export default function Studio() {
 
       {/* ---- console: settings on the left, the archive on the right, so the
              width is actually used instead of a lonely centered column ---- */}
-      <div className="mx-auto mt-12 grid max-w-6xl gap-8 px-5 sm:px-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-start">
+      <div className="mx-auto mt-12 grid max-w-6xl gap-8 px-5 sm:px-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         {/* ---- studio settings (sticky: it's the control panel, so it follows
                you while you scroll the archive instead of leaving the left blank) ---- */}
         <section className="xl:sticky xl:top-20">
@@ -271,8 +278,37 @@ export default function Studio() {
           />
         </section>
 
-        <section ref={libraryRef} className="scroll-mt-24">
+        <section ref={libraryRef} className="flex scroll-mt-24 flex-col">
           <EpisodeLibrary refreshToken={refreshToken} autoExpandId={autoExpandId} />
+
+          {/* Summary end-cap: grows to fill the archive column so a short list
+              doesn't strand the right side, and it carries real numbers. */}
+          {readyEpisodes.length > 0 && (
+            <div className="mt-4 flex flex-1 flex-col items-center justify-center rounded-2xl border border-line bg-bg2 p-8 text-center">
+              <div className="mb-6 flex h-10 items-end gap-1" aria-hidden="true">
+                {WIRE_BARS.map((h, i) => (
+                  <span
+                    key={i}
+                    className="w-1 rounded-full bg-amber"
+                    style={{ height: `${h}%`, opacity: 0.55 }}
+                  />
+                ))}
+              </div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-faint">
+                The wire, so far
+              </p>
+              <div className="mt-4 flex items-end gap-12">
+                <div>
+                  <p className="font-mono text-4xl tabular-nums text-ink">{readyEpisodes.length}</p>
+                  <p className="mt-1 text-xs text-muted">episodes</p>
+                </div>
+                <div>
+                  <p className="font-mono text-4xl tabular-nums text-ink">{minutesOnAir}</p>
+                  <p className="mt-1 text-xs text-muted">minutes on air</p>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>
