@@ -48,3 +48,14 @@ def test_write_script_parses_bare_array():
     llm = _ShapeLLM(json.dumps(_SEGMENTS))
     res = write_script(llm, _articles(), Preferences(id=1))
     assert [s.kind for s in res.segments] == ["intro", "story", "outro"]
+
+
+def test_title_is_the_intros_first_clause_not_a_hard_cut():
+    intro = "Four football giants are staring at the World Cup semi-finals, and much more."
+    segs = [
+        {"kind": "intro", "speaker": "host", "text": intro},
+        {"kind": "outro", "speaker": "host", "text": "That is the rundown."},
+    ]
+    res = write_script(_ShapeLLM(json.dumps(segs)), _articles(), Preferences(id=1))
+    # A complete phrase (to the comma), not "...staring at the World".
+    assert res.title == "Four football giants are staring at the World Cup semi-finals"

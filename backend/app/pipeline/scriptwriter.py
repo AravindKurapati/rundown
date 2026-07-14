@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from app.adapters.base import LLMClient
@@ -53,8 +54,11 @@ def _segments_from(text: str) -> list[dict]:
 def _title_from(segments: list[Segment]) -> str:
     for s in segments:
         if s.kind == "intro":
-            words = s.text.split()
-            return " ".join(words[:8]).rstrip(".,") or "Rundown episode"
+            # The intro's first clause (up to a comma or sentence end), capped so
+            # a title is a complete phrase, not a hard word-count cut mid-thought.
+            head = re.split(r"[,.;:]", s.text.strip(), maxsplit=1)[0]
+            words = head.split()[:12]
+            return " ".join(words).rstrip(".,;:") or "Rundown episode"
     return "Rundown episode"
 
 
