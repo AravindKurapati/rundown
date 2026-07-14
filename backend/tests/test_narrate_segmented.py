@@ -34,14 +34,17 @@ def _db(tmp_path, monkeypatch):
     dbmod.init_db()
 
 
-def test_one_call_per_segment_with_a_growing_stitch_chain():
+def test_one_call_per_segment_conditioned_on_its_neighbors():
     tts = FakeTTSClient()
     narrate_segmented(tts, _segments(), "v1", "m1")
     seg_calls = [c for c in tts.calls if "energy" in c]
     assert len(seg_calls) == 4
-    assert seg_calls[0]["previous_request_ids"] == []
-    assert seg_calls[1]["previous_request_ids"] == ["fake-1"]
-    assert seg_calls[3]["previous_request_ids"] == ["fake-1", "fake-2", "fake-3"]
+    segs = _segments()
+    assert seg_calls[0]["previous_text"] is None
+    assert seg_calls[0]["next_text"] == segs[1].text
+    assert seg_calls[2]["previous_text"] == segs[1].text
+    assert seg_calls[2]["next_text"] == segs[3].text
+    assert seg_calls[3]["next_text"] is None
     assert [c["energy"] for c in seg_calls] == ["warm", "high", "calm", "warm"]
 
 

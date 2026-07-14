@@ -16,7 +16,6 @@ class LLMClient(Protocol):
 @dataclass
 class SegmentAudio:
     pcm: bytes
-    request_id: str | None
     billed_chars: int
 
 
@@ -29,5 +28,6 @@ class TTSClient(Protocol):
         voice_id: str,
         model_id: str,
         energy: str = "warm",
-        previous_request_ids: list[str] | None = None,
+        previous_text: str | None = None,
+        next_text: str | None = None,
     ) -> SegmentAudio: ...

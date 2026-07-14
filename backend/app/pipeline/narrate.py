@@ -41,25 +41,25 @@ def narrate_single(tts: TTSClient, segments: list[Segment], voice_id: str, model
 def narrate_segmented(
     tts: TTSClient, segments: list[Segment], voice_id: str, model_id: str
 ) -> SegmentedNarrateResult:
-    """One TTS call per segment, each delivered at the segment's energy and
-    stitched to the prior calls' prosody, assembled locally into one MP3."""
+    """One TTS call per segment, each delivered at the segment's energy, with
+    prosody conditioned on the neighboring segments' text so the voice reads as
+    one continuous host, assembled locally into one MP3."""
     rate = settings.pcm_rate
     chunks: list[tuple[str, bytes]] = []
     calls: list[dict] = []
-    request_ids: list[str] = []
     billed = 0
     for i, seg in enumerate(segments):
         t0 = time.perf_counter()
         try:
             out = tts.synthesize_segment(
                 seg.text.strip(), voice_id=voice_id, model_id=model_id,
-                energy=seg.energy, previous_request_ids=list(request_ids),
+                energy=seg.energy,
+                previous_text=segments[i - 1].text.strip() if i > 0 else None,
+                next_text=segments[i + 1].text.strip() if i + 1 < len(segments) else None,
             )
         except Exception as e:  # noqa: BLE001
             raise SegmentedNarrationError(e, billed) from e
         billed += out.billed_chars
-        if out.request_id:
-            request_ids.append(out.request_id)
         chunks.append((seg.kind, out.pcm))
         calls.append({
             "index": i, "kind": seg.kind, "energy": seg.energy,

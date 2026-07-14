@@ -39,14 +39,15 @@ class FakeTTSClient:
         voice_id: str,
         model_id: str,
         energy: str = "warm",
-        previous_request_ids: list[str] | None = None,
+        previous_text: str | None = None,
+        next_text: str | None = None,
     ) -> SegmentAudio:
         self._segment_calls += 1
         if self._fail_after is not None and self._segment_calls > self._fail_after:
             raise RuntimeError("fake TTS failure")
         self.calls.append({
             "chars": len(text), "voice_id": voice_id, "model_id": model_id,
-            "energy": energy, "previous_request_ids": list(previous_request_ids or []),
+            "energy": energy, "previous_text": previous_text, "next_text": next_text,
         })
         pcm = b"\x01\x00" * (settings.pcm_rate * _SEGMENT_MS // 1000)
-        return SegmentAudio(pcm=pcm, request_id=f"fake-{self._segment_calls}", billed_chars=len(text))
+        return SegmentAudio(pcm=pcm, billed_chars=len(text))

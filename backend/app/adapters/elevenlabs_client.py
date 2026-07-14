@@ -9,13 +9,10 @@ from app.adapters.retry import transient_retry
 _TIMEOUT_S = 180.0
 
 # How a segment's energy bends the base delivery, as (stability, style) deltas.
-# Modest on purpose: request stitching keeps prosody continuous across segments,
-# and a large swing fights it. The listener should hear the same host getting
-# more animated, not a different person.
+# Modest on purpose: the surrounding-text conditioning keeps prosody continuous
+# across segments, and a large swing fights it. The listener should hear the
+# same host getting more animated, not a different person.
 _ENERGY_DELTAS = {"high": (-0.12, +0.15), "calm": (+0.10, -0.10), "warm": (0.0, 0.0)}
-
-# ElevenLabs allows conditioning on at most the last 3 prior requests.
-_STITCH_WINDOW = 3
 
 
 def _clamp(v: float) -> float:
@@ -65,27 +62,30 @@ class ElevenLabsClient:
         voice_id: str,
         model_id: str,
         energy: str = "warm",
-        previous_request_ids: list[str] | None = None,
+        previous_text: str | None = None,
+        next_text: str | None = None,
     ) -> SegmentAudio:
-        """One segment as raw PCM, delivered at the segment's energy and stitched
-        to the prior segments' prosody. Returns the provider's request id (for the
-        next segment's stitching) and the billed character count from the
-        character-cost header, so cost accounting reports actuals, not estimates."""
-        window = list(previous_request_ids or [])[-_STITCH_WINDOW:]
+        """One segment as raw PCM, delivered at the segment's energy, with prosody
+        conditioned on the surrounding script text. previous_text/next_text rather
+        than previous_request_ids: request-id stitching is rejected with a 400 on
+        accounts with high privacy mode (found on the first real run), while text
+        conditioning is in-request context that works everywhere. Billed character
+        counts come from the character-cost header, so cost accounting reports
+        actuals, not estimates."""
         with self._c.text_to_speech.with_raw_response.convert(
             text=text,
             voice_id=voice_id,
             model_id=model_id,
             output_format=settings.tts_pcm_format,
             voice_settings=voice_settings_for_energy(energy),
-            previous_request_ids=window,
+            previous_text=previous_text,
+            next_text=next_text,
         ) as response:
             headers = response._response.headers
             pcm = b"".join(response.data)
         billed = headers.get("character-cost")
         return SegmentAudio(
             pcm=pcm,
-            request_id=headers.get("request-id"),
             billed_chars=int(billed) if billed and str(billed).isdigit() else len(text),
         )
 
