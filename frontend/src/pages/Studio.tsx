@@ -252,7 +252,7 @@ export default function Studio() {
 
       {/* ---- console: settings on the left, the archive on the right, so the
              width is actually used instead of a lonely centered column ---- */}
-      <div className="mx-auto mt-12 grid max-w-6xl gap-8 px-5 sm:px-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
+      <div className="mx-auto mt-12 grid max-w-6xl gap-8 px-5 sm:px-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-start">
         {/* ---- studio settings (sticky: it's the control panel, so it follows
                you while you scroll the archive instead of leaving the left blank) ---- */}
         <section className="xl:sticky xl:top-20">

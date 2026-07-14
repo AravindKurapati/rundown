@@ -98,7 +98,9 @@
   font-family: "Anton", Impact, "Arial Narrow", sans-serif;
   font-weight: 400;
   letter-spacing: 0.01em;
-  line-height: 0.85;
+  /* line-height is set per use via Tailwind leading-* utilities: tight for
+     single-line display headings, looser where the text can wrap (episode
+     titles) so a tall face like Anton doesn't overlap its own lines. */
 }
 
 /* ---------- signature: ON AIR ---------- */

@@ -219,7 +219,7 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6">
         {/* how it should sound — preset dropdown + custom */}
         <div>
           <label htmlFor="tone" className={labelClass}>
@@ -347,7 +347,7 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
         <label htmlFor="schedule_cadence" className={labelClass}>
           When it arrives
         </label>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3">
           <select
             id="schedule_cadence"
             value={prefs.schedule_cadence}

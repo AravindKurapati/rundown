@@ -139,7 +139,7 @@ export default function EpisodeLibrary({ refreshToken, autoExpandId }: EpisodeLi
                   <span className="min-w-0 flex-1">
                     <span
                       title={title}
-                      className="wordmark line-clamp-2 text-lg leading-tight text-ink"
+                      className="wordmark line-clamp-2 text-lg leading-normal text-ink"
                     >
                       {title}
                     </span>
