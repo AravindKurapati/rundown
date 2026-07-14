@@ -31,7 +31,7 @@ The single LLM call does the editorial work: choose the best stories, order them
 
 The React app is two pages: a **Studio** for preferences, generation, and playback, and a **Dashboard** showing real run metrics alongside clearly labeled mock product analytics.
 
-The segment contract is host-agnostic on purpose. Single-host is what ships: every segment uses one speaker and one voice, so the whole script is a single TTS call. Two-host is the same contract with alternating `host_a` and `host_b` speakers. The prompt can already write it and there is a sample script in the repo, but per-speaker narration (synthesize each turn, stitch, loudness-normalize) is not wired up. It is a documented extension, not a claim. See `solution.md`.
+The segment contract is host-agnostic on purpose. Single-host is what ships: every segment uses one speaker and one voice, so the whole script is a single TTS call. Two-host is the same contract with alternating `host_a` and `host_b` speakers. The prompt can already write it and there is a sample script in the repo (`docs/sample-episode-two-host.md`), but per-speaker narration (synthesize each turn, stitch, loudness-normalize) is not wired up. It is a documented extension, not a claim. See `solution.md`.
 
 ## Run it locally
 
