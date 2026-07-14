@@ -87,7 +87,7 @@ def test_put_preferences_bad_target_minutes_is_422(tmp_path, monkeypatch):
 
 
 def test_put_preferences_rejects_oversized_minutes(tmp_path, monkeypatch):
-    # Upper bound matches the UI's max (180), so a client can't request a length
+    # Upper bound matches the UI's max (10), so a client can't request a length
     # the product won't produce.
     c = _client(tmp_path, monkeypatch)
     assert c.put("/api/preferences", json={"target_minutes": 500}).status_code == 422
