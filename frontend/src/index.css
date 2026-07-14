@@ -71,7 +71,7 @@
   body {
     background: var(--bg);
     color: var(--ink);
-    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Fraunces", Georgia, Cambria, serif;
     -webkit-font-smoothing: antialiased;
     transition: background 0.35s ease, color 0.35s ease;
   }
