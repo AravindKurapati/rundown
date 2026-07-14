@@ -16,6 +16,14 @@ class Settings:
         self.llm_model_script = os.getenv("LLM_MODEL_SCRIPT", "gpt-5.5")
         self.tts_model = os.getenv("TTS_MODEL", "eleven_multilingual_v2")
         self.tts_voice_a = os.getenv("TTS_VOICE_A", "21m00Tcm4TlvDq8ikWAM")
+        # Delivery knobs. The voice default (high stability, zero style) reads flat
+        # and even; a briefing wants emotional range. Lower stability lets pitch and
+        # pace move line to line, a little style exaggeration adds warmth, speaker
+        # boost keeps clarity. Podcast-leaning starting point, all overridable.
+        self.tts_stability = _f("TTS_STABILITY", 0.42)
+        self.tts_similarity = _f("TTS_SIMILARITY", 0.78)
+        self.tts_style = _f("TTS_STYLE", 0.28)
+        self.tts_speaker_boost = os.getenv("TTS_SPEAKER_BOOST", "1") == "1"
         self.elevenlabs_rate_usd_per_1k = _f("ELEVENLABS_RATE_USD_PER_1K", 0.10)
         self.openai_rate_in = _f("OPENAI_RATE_USD_PER_1K_IN", 0.0005)
         self.openai_rate_out = _f("OPENAI_RATE_USD_PER_1K_OUT", 0.0015)

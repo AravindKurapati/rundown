@@ -1,3 +1,4 @@
+from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 from app.config import settings
 from app.adapters.retry import transient_retry
@@ -10,11 +11,24 @@ _TIMEOUT_S = 180.0
 class ElevenLabsClient:
     def __init__(self):
         self._c = ElevenLabs(api_key=settings.elevenlabs_api_key, timeout=_TIMEOUT_S)
+        # Passing no settings renders at the voice default: high stability, no
+        # style, which is exactly the flat, even read we do not want. These give
+        # the delivery loud/soft range without drifting into erratic pacing.
+        self._voice_settings = VoiceSettings(
+            stability=settings.tts_stability,
+            similarity_boost=settings.tts_similarity,
+            style=settings.tts_style,
+            use_speaker_boost=settings.tts_speaker_boost,
+        )
 
     @transient_retry
     def synthesize(self, text: str, voice_id: str, model_id: str) -> bytes:
         stream = self._c.text_to_speech.convert(
-            text=text, voice_id=voice_id, model_id=model_id, output_format="mp3_44100_128",
+            text=text,
+            voice_id=voice_id,
+            model_id=model_id,
+            output_format="mp3_44100_128",
+            voice_settings=self._voice_settings,
         )
         return b"".join(stream)
 
