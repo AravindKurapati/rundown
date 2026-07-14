@@ -9,11 +9,17 @@ from app.store.models import Preferences
 _PROMPT = (Path(__file__).parent.parent / "prompts" / "scriptwriter.txt").read_text(encoding="utf-8")
 
 
+# Delivery energies the narrator understands. Anything else from the model
+# degrades to "warm" so a creative label can never break narration.
+_ENERGIES = ("calm", "warm", "high")
+
+
 @dataclass
 class Segment:
     kind: str
     speaker: str
     text: str
+    energy: str = "warm"
 
 
 @dataclass
@@ -56,7 +62,10 @@ def _title_from(segments: list[Segment]) -> str:
         if s.kind == "intro":
             # The intro's first clause (up to a comma or sentence end), capped so
             # a title is a complete phrase, not a hard word-count cut mid-thought.
-            head = re.split(r"[,.;:]", s.text.strip(), maxsplit=1)[0]
+            # Clause punctuation, or a period only where it ends a sentence: not
+            # inside "3.5" (no space after) and not after an initial as in "U.S."
+            # (single capital before), so news-style intros keep their titles.
+            head = re.split(r"[,;:]|(?<![A-Z])\.(?=\s|$)", s.text.strip(), maxsplit=1)[0]
             words = head.split()[:12]
             return " ".join(words).rstrip(".,;:") or "Rundown episode"
     return "Rundown episode"
@@ -65,7 +74,15 @@ def _title_from(segments: list[Segment]) -> str:
 def write_script(llm: LLMClient, articles: list[Article], prefs: Preferences) -> ScriptResult:
     res = llm.complete(_PROMPT, _user_message(articles, prefs), model=prefs.llm_model_script)
     raw = _segments_from(res.text)
-    segments = [Segment(kind=s["kind"], speaker=s.get("speaker", "host"), text=s["text"]) for s in raw]
+    segments = [
+        Segment(
+            kind=s["kind"],
+            speaker=s.get("speaker", "host"),
+            text=s["text"],
+            energy=s.get("energy") if s.get("energy") in _ENERGIES else "warm",
+        )
+        for s in raw
+    ]
     if not segments or segments[0].kind != "intro" or segments[-1].kind != "outro":
         raise ValueError("script must start with intro and end with outro")
     return ScriptResult(segments=segments, tokens_in=res.tokens_in, tokens_out=res.tokens_out, title=_title_from(segments))

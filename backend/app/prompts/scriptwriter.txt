@@ -15,9 +15,10 @@ Target word count = target_minutes x 150. Stay within about 7 percent of that to
 
 OUTPUT FORMAT
 Return ONLY a JSON object of the form { "segments": [ ...segment objects... ] }, no prose before or after, no code fences. Each segment object:
-{ "kind": "intro" | "story" | "transition" | "outro", "speaker": <speaker id>, "text": <spoken words only> }
+{ "kind": "intro" | "story" | "transition" | "outro", "speaker": <speaker id>, "text": <spoken words only>, "energy": "calm" | "warm" | "high" }
 - Exactly one "intro" first and one "outro" last.
 - One "story" segment per selected news item.
+- "energy" is how the voice should deliver the segment, and it must track this listener: a story squarely inside their interests gets "high", background or somber material gets "calm", everything else "warm". Do not mark more than two segments "high" per episode; excitement everywhere is excitement nowhere. Intro and outro are usually "warm".
 - "transition" segments are optional, short (one or two sentences), and used between stories where a bridge helps. If the bridge fits naturally as the first sentence of the next story, do that instead.
 - "text" is pure speech. No stage directions, no bracketed cues, no SSML, no markdown, no headers, no bullet points, no URLs read as URLs. If it would sound strange read aloud verbatim, rewrite it.
 

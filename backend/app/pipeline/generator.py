@@ -12,14 +12,14 @@ from app.store.metrics import (
 )
 from app.pipeline.dedupe import dedupe
 from app.pipeline.scriptwriter import write_script
-from app.pipeline.narrate import narrate_single
+from app.pipeline.narrate import narrate_single, narrate_segmented
 
 
-def _stage(episode_id, name, fn):
+def _stage(episode_id, name, fn, detail_of=None):
     t0 = time.perf_counter()
     try:
         result = fn()
-        ok, detail = True, None
+        ok, detail = True, (detail_of(result) if detail_of else None)
         return result
     except Exception as e:  # noqa: BLE001
         ok, detail = False, str(e)
@@ -56,14 +56,21 @@ def generate_episode(episode_id, source, llm, tts, prefs):
                 f"${total_spent_usd():.2f} exceeds cap ${settings.budget_cap_usd:.2f}"
             )
 
-        narration = _stage(episode_id, "narrate",
-                           lambda: narrate_single(tts, script.segments, prefs.voice_a, prefs.tts_model))
+        if settings.narration_mode == "single":
+            narration = _stage(episode_id, "narrate",
+                               lambda: narrate_single(tts, script.segments, prefs.voice_a, prefs.tts_model))
+            # Estimated from speaking pace; segmented mode below measures for real.
+            duration = int(narration.word_count / 150 * 60)
+        else:
+            narration = _stage(episode_id, "narrate",
+                               lambda: narrate_segmented(tts, script.segments, prefs.voice_a, prefs.tts_model),
+                               detail_of=lambda r: json.dumps({"calls": r.calls}))
+            duration = narration.duration_seconds
 
         path = settings.audio_dir / f"{episode_id}.mp3"
         path.write_bytes(narration.audio)
 
         cost = episode_cost(narration.characters, script.tokens_in, script.tokens_out)
-        duration = int(narration.word_count / 150 * 60)
         return repo.update_episode(
             episode_id,
             status="ready",
@@ -86,10 +93,12 @@ def generate_episode(episode_id, source, llm, tts, prefs):
         # write, after the provider already billed the synthesis). Failures before
         # the script (gather/dedupe/bad prefs) spent nothing and record no cost.
         if script:
-            synthesized = narration.characters if narration else 0
+            # A narration that failed partway still billed the completed segments;
+            # the error carries that count so the cap sees the real spend.
+            synthesized = narration.characters if narration else getattr(e, "billed_chars", 0)
             cost = episode_cost(synthesized, script.tokens_in, script.tokens_out)
             tokens = script.tokens_in + script.tokens_out
-            tts_chars = narration.characters if narration else None
+            tts_chars = synthesized or None
         else:
             cost = tokens = tts_chars = None
         return repo.update_episode(

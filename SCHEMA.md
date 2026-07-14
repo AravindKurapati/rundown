@@ -34,12 +34,12 @@ Podcast episodes with generation metadata and status.
 | created_at | datetime | now(UTC) | Creation timestamp (tz-aware UTC) |
 | completed_at | datetime | NULL | Completion timestamp |
 | mp3_path | str | NULL | Path to generated MP3 file |
-| transcript_json | str | NULL | Episode transcript as JSON |
-| duration_seconds | int | NULL | Audio duration in seconds |
+| transcript_json | str | NULL | Episode transcript as JSON; segments carry an optional `energy` (calm/warm/high) |
+| duration_seconds | int | NULL | Audio duration in seconds; exact (measured from assembled PCM) in segmented narration, word-count estimate in single mode |
 | word_count | int | NULL | Transcript word count |
-| tts_characters | int | NULL | Characters processed by TTS |
+| tts_characters | int | NULL | Characters billed by TTS; provider-reported per call in segmented mode |
 | openai_tokens | int | NULL | Tokens used for LLM calls |
-| est_cost_usd | float | NULL | Estimated cost in USD |
+| est_cost_usd | float | NULL | Cost in USD; the TTS share uses provider-billed characters in segmented mode |
 | latency_ms | int | NULL | End-to-end generation latency |
 | host_mode | str | "single" | Hosting mode used for this episode (single ships) |
 | source_count | int | NULL | Number of sources processed |
@@ -59,7 +59,7 @@ Stage-level events during episode generation for debugging and monitoring.
 | ended_at | datetime | NULL | Stage completion timestamp |
 | duration_ms | int | NULL | Stage duration in milliseconds |
 | ok | bool | True | Success flag |
-| detail | str | NULL | Optional stage-specific detail or error |
+| detail | str | NULL | Optional stage-specific detail or error; the narrate stage stores a per-segment call breakdown (index, kind, energy, chars, ms) as JSON in segmented mode |
 
 ## analytics_daily
 

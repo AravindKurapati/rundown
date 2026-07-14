@@ -13,5 +13,21 @@ class LLMClient(Protocol):
     def complete(self, system: str, user: str, model: str) -> LLMResult: ...
 
 
+@dataclass
+class SegmentAudio:
+    pcm: bytes
+    request_id: str | None
+    billed_chars: int
+
+
 class TTSClient(Protocol):
     def synthesize(self, text: str, voice_id: str, model_id: str) -> bytes: ...
+
+    def synthesize_segment(
+        self,
+        text: str,
+        voice_id: str,
+        model_id: str,
+        energy: str = "warm",
+        previous_request_ids: list[str] | None = None,
+    ) -> SegmentAudio: ...

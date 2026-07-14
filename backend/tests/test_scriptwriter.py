@@ -50,6 +50,43 @@ def test_write_script_parses_bare_array():
     assert [s.kind for s in res.segments] == ["intro", "story", "outro"]
 
 
+def test_segments_carry_the_models_energy():
+    segs = [
+        {"kind": "intro", "speaker": "host", "text": "Hello.", "energy": "warm"},
+        {"kind": "story", "speaker": "host", "text": "Big news.", "energy": "high"},
+        {"kind": "story", "speaker": "host", "text": "Quiet news.", "energy": "calm"},
+        {"kind": "outro", "speaker": "host", "text": "Bye.", "energy": "warm"},
+    ]
+    res = write_script(_ShapeLLM(json.dumps({"segments": segs})), _articles(), Preferences(id=1))
+    assert [s.energy for s in res.segments] == ["warm", "high", "calm", "warm"]
+
+
+def test_missing_or_invalid_energy_defaults_to_warm():
+    # Old transcripts, fakes, and a model that ignores the field must keep working.
+    segs = [
+        {"kind": "intro", "speaker": "host", "text": "Hello."},
+        {"kind": "story", "speaker": "host", "text": "News.", "energy": "frantic"},
+        {"kind": "outro", "speaker": "host", "text": "Bye.", "energy": 3},
+    ]
+    res = write_script(_ShapeLLM(json.dumps(segs)), _articles(), Preferences(id=1))
+    assert [s.energy for s in res.segments] == ["warm", "warm", "warm"]
+
+
+def test_title_survives_decimals_and_abbreviations():
+    # News intros lead with numbers and abbreviations; the clause split must not
+    # treat the period in "3.5" or "U.S." as a sentence end.
+    segs = [
+        {"kind": "intro", "speaker": "host", "text": "Markets fell 3.5 percent today, and there is more."},
+        {"kind": "outro", "speaker": "host", "text": "That is the rundown."},
+    ]
+    res = write_script(_ShapeLLM(json.dumps(segs)), _articles(), Preferences(id=1))
+    assert res.title == "Markets fell 3.5 percent today"
+
+    segs[0]["text"] = "U.S. lawmakers advanced the bill in a late vote, and more."
+    res = write_script(_ShapeLLM(json.dumps(segs)), _articles(), Preferences(id=1))
+    assert res.title == "U.S. lawmakers advanced the bill in a late vote"
+
+
 def test_title_is_the_intros_first_clause_not_a_hard_cut():
     intro = "Four football giants are staring at the World Cup semi-finals, and much more."
     segs = [

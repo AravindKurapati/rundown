@@ -2,7 +2,7 @@
 
 A personal daily news podcast, generated on your machine, for well under a dollar an episode at the default rates.
 
-Tell Rundown what you care about and it produces a five-minute briefing you would actually listen to: it gathers fresh news on your interests, picks the stories worth your time, writes a script with a point of view, and reads it aloud in a good voice. The idea underneath is restraint: exactly two paid API calls per episode. One structured LLM call both selects the stories and writes the full segmented script, and one TTS call renders it. Everything else is free, local, and deterministic.
+Tell Rundown what you care about and it produces a five-minute briefing you would actually listen to: it gathers fresh news on your interests, picks the stories worth your time, writes a script with a point of view, and reads it aloud in a good voice. The idea underneath is restraint: one structured LLM call both selects the stories and writes the full segmented script, and one TTS call per segment renders it, each delivered at the energy the script asks for and stitched so the voice stays continuous. Splitting narration by segment costs nothing extra (TTS bills per character), and it buys expressive delivery: stories the listener cares about get read like they matter. Everything else is free, local, and deterministic.
 
 ## How it works
 
@@ -18,20 +18,23 @@ gather (Google News RSS, free)      one item per story, many overlapping
 dedupe (deterministic, free)        collapse syndicated duplicates
    |
    v
-script  (1 LLM call, paid)          select 4-6 stories, order them,
-   |                                write segments: {kind, speaker, text}
+script  (1 LLM call, paid)          select 4-6 stories, order them, write
+   |                                segments: {kind, speaker, text, energy}
    v
-narrate (1 TTS call, paid)          join segments, synthesize one MP3
-   |
+narrate (1 TTS call/segment, paid)  each segment at its energy, prosody
+   |                                stitched across calls via request ids
+   v
+assemble (local, free)              PCM + topic gaps + a quiet ding,
+   |                                encode one MP3, measure exact duration
    v
 persist (SQLite + local MP3)        transcript + per-stage timing + cost
 ```
 
-The single LLM call does the editorial work: choose the best stories, order them for pacing, and write the script as an ordered list of segments, each tagged with a `kind` (intro, story, transition, outro), a `speaker`, and pure spoken `text`. The segments are joined and sent to ElevenLabs in one call, and out comes an MP3, a transcript, and per-stage timing and cost written to SQLite.
+The single LLM call does the editorial work: choose the best stories, order them for pacing, and write the script as an ordered list of segments, each tagged with a `kind` (intro, story, transition, outro), a `speaker`, pure spoken `text`, and an `energy` (calm, warm, high) that tracks how much this listener cares about the topic. Each segment then goes to ElevenLabs as its own call: the energy bends the voice settings (a high-energy story gets lower stability and more style, so it reads livelier), and request stitching carries the prosody across calls so it stays one continuous host. The PCM comes back raw, gets assembled locally with a beat of air and a quiet ding between topics, and is encoded to MP3 on the machine, which also makes the reported duration exact rather than estimated. Set `NARRATION_MODE=single` to fall back to the original one-call narration.
 
 The React app is two pages: a **Studio** for preferences, generation, and playback, and a **Dashboard** showing real run metrics alongside clearly labeled mock product analytics.
 
-The segment contract is host-agnostic on purpose. Single-host is what ships: every segment uses one speaker and one voice, so the whole script is a single TTS call. Two-host is the same contract with alternating `host_a` and `host_b` speakers. The prompt can already write it and there is a sample script in the repo (`docs/sample-episode-two-host.md`), but per-speaker narration (synthesize each turn, stitch, loudness-normalize) is not wired up. It is a documented extension, not a claim. See `solution.md`.
+The segment contract is host-agnostic on purpose. Single-host is what ships: every segment uses one speaker and one voice. Two-host is the same contract with alternating `host_a` and `host_b` speakers, and the prompt can already write it (there is a sample script at `docs/sample-episode-two-host.md`). The segmented narration engine now does most of the mechanical work two-host would need (per-segment synthesis, stitching, local assembly); what remains unwired is the per-speaker voice routing and loudness-matching two different voices, so two-host stays a documented extension, not a claim. See `solution.md`.
 
 ## Run it locally
 
@@ -88,7 +91,8 @@ The schedule cadence and time you set in the Studio are saved as preferences and
 
 - **One LLM call selects and writes.** The model that picks the stories is the model shaping the narrative, so pacing is coherent and cost is one call, not five.
 - **Premium where it is heard, free where it is not.** One capable model does the editorial work (select and write) in a single paid call, and a quality ElevenLabs voice renders it; gather and dedupe are deterministic and free. All model ids and rates are configurable in `.env`.
-- **Fake LLM and TTS adapters behind the same interfaces.** Dev, tests, and CI cost nothing and never flake on the network. The fake TTS records its calls, so a test can assert the load-bearing property: exactly one synthesis call per episode.
+- **Expressive narration over call-count minimalism.** The first cut narrated a whole episode in one TTS call, which was tidy but read flat: every story at the same pitch. Splitting narration per segment costs the same (billing is per character) and lets the energy the script asked for actually reach the voice, with request stitching keeping the read continuous. Eleven v3's inline audio tags were the tempting shortcut and were rejected: a 5,000-character cap that cannot fit a ten-minute episode in one call, and no stitching support to chunk around it.
+- **Fake LLM and TTS adapters behind the same interfaces.** Dev, tests, and CI cost nothing and never flake on the network. The fake TTS records its calls and returns real PCM, so tests can assert the load-bearing properties: one synthesis call per segment, a stitching chain that grows in order, and billed characters that match what the provider reports.
 - **Scheduling is persisted config plus a headless CLI**, not an in-process scheduler with restart and duplicate-run problems.
 - **SQLite and local MP3 files.** The right size for one listener on one machine. The engine reads a `DATABASE_URL`, so Postgres is a connection string away (plus a driver and migrations); object storage stays documented, not built.
 - **Dashboard honesty.** Real metrics (latency, cost, success rate) come from real runs. Mock product analytics (DAU, listen-through) carry an `is_mock` flag in the data and a "Mock data, not real" badge everywhere they render in the UI.

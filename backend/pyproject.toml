@@ -12,6 +12,9 @@ dependencies = [
   "elevenlabs>=1.5",
   "python-dotenv>=1.0",
   "httpx>=0.27",
+  # MP3 encoding for locally assembled PCM. A pure-pip wheel on every platform:
+  # no ffmpeg, no system packages.
+  "lameenc>=1.8",
 ]
 
 [project.optional-dependencies]
