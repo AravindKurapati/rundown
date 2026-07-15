@@ -44,8 +44,9 @@ const TONE_PRESETS = [
 ];
 
 // Length is a product choice, not a raw number. A briefing tops out around ten
-// minutes because the whole episode is one TTS call (no chunking); presets make
-// that legible and a custom field allows fine control within the ceiling.
+// minutes: past that a daily rundown stops being a rundown, and cost and script
+// quality both degrade. Presets make the ceiling legible; the custom field
+// allows fine control within it.
 const MAX_MINUTES = 10;
 const LENGTH_PRESETS = [
   { label: "Brief", minutes: 5, note: "quick rundown" },

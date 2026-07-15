@@ -7,10 +7,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-# Ceiling on requested episode length. The pipeline narrates a whole episode in a
-# single ElevenLabs call (no chunking/stitching), which caps a script at roughly
-# 10k characters, about 10 minutes. Bounding here keeps the UI from offering a
-# length the one-call design cannot render (which would fail at narration).
+# Ceiling on requested episode length. Ten minutes is a product ceiling (a daily
+# rundown, not a lecture) and a cost guard: script and TTS spend scale with
+# length. It also keeps the NARRATION_MODE=single fallback viable, since one
+# ElevenLabs call tops out around 10k characters.
 MAX_TARGET_MINUTES = 10
 
 
