@@ -1,6 +1,10 @@
 # Rundown
 
+![ci](https://github.com/AravindKurapati/rundown/actions/workflows/ci.yml/badge.svg)
+
 A personal daily news podcast, generated on your machine, for well under a dollar an episode at the default rates.
+
+**Hear it first: [sample.mp3](sample.mp3)** is a real episode this code generated end to end. 6 minutes 24 seconds, ElevenLabs' Daniel voice, about 24 cents of API spend.
 
 Tell Rundown what you care about and it produces a five-minute briefing you would actually listen to: it gathers fresh news on your interests, picks the stories worth your time, writes a script with a point of view, and reads it aloud in a good voice.
 
