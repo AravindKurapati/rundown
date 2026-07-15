@@ -2,6 +2,8 @@ from datetime import datetime, date, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
 
+from app.config import settings
+
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -13,7 +15,9 @@ class Preferences(SQLModel, table=True):
     tone: str = "sharp, warm, lightly witty"
     target_minutes: int = 5
     host_mode: str = "single"
-    voice_a: str = "21m00Tcm4TlvDq8ikWAM"  # ElevenLabs premade "Rachel"
+    # Default voice comes from TTS_VOICE_A so the env knob is the single source
+    # of truth; out of the box that is ElevenLabs' premade news presenter "Daniel".
+    voice_a: str = Field(default_factory=lambda: settings.tts_voice_a)
     voice_b: str = "ErXwobaYiN019PkySvjV"  # ElevenLabs premade "Antoni"
     tts_model: str = "eleven_multilingual_v2"
     llm_model_script: str = "gpt-5.5"

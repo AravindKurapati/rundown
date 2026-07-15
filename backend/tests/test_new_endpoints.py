@@ -29,7 +29,7 @@ def test_estimate_reports_chars_and_cost_from_the_same_helpers(tmp_path, monkeyp
     expected = round(metrics.episode_cost(body["est_chars"], tokens_in=1500, tokens_out=minutes * 200), 2)
     assert body["est_cost_usd"] == expected
     assert body["offline"] is True
-    assert body["voice_name"] == "Rachel"  # config default voice_a
+    assert body["voice_name"] == "Daniel"  # config default voice_a
 
 
 def test_estimate_parses_topics_and_survives_bad_json(tmp_path, monkeypatch):
@@ -90,5 +90,5 @@ def test_voices_falls_back_offline(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     body = c.get("/api/voices").json()
     assert body["source"] == "fallback"
-    assert any(v["name"] == "Rachel" for v in body["voices"])
-    assert len(body["voices"]) == 8
+    assert any(v["name"] == "Daniel" for v in body["voices"])
+    assert len(body["voices"]) == 9

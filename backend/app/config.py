@@ -15,7 +15,7 @@ class Settings:
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY", "")
         self.llm_model_script = os.getenv("LLM_MODEL_SCRIPT", "gpt-5.5")
         self.tts_model = os.getenv("TTS_MODEL", "eleven_multilingual_v2")
-        self.tts_voice_a = os.getenv("TTS_VOICE_A", "21m00Tcm4TlvDq8ikWAM")
+        self.tts_voice_a = os.getenv("TTS_VOICE_A", "onwK4e9ZLuTAKqWW03F9")  # premade "Daniel"
         # Delivery knobs. The voice default (high stability, zero style) reads flat
         # and even; a briefing wants emotional range. Lower stability lets pitch and
         # pace move line to line, a little style exaggeration adds warmth, speaker

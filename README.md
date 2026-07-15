@@ -2,7 +2,9 @@
 
 A personal daily news podcast, generated on your machine, for well under a dollar an episode at the default rates.
 
-Tell Rundown what you care about and it produces a five-minute briefing you would actually listen to: it gathers fresh news on your interests, picks the stories worth your time, writes a script with a point of view, and reads it aloud in a good voice. The idea underneath is restraint: one structured LLM call both selects the stories and writes the full segmented script, and one TTS call per segment renders it, each delivered at the energy the script asks for and conditioned on its neighbors so the voice stays continuous. Splitting narration by segment costs nothing extra (TTS bills per character), and it buys expressive delivery: stories the listener cares about get read like they matter. Everything else is free, local, and deterministic.
+Tell Rundown what you care about and it produces a five-minute briefing you would actually listen to: it gathers fresh news on your interests, picks the stories worth your time, writes a script with a point of view, and reads it aloud in a good voice.
+
+The idea underneath is restraint. One structured LLM call both selects the stories and writes the full segmented script, and one TTS call per segment renders it, each delivered at the energy the script asks for and conditioned on its neighbors so the voice stays continuous. Splitting narration by segment costs nothing extra (TTS bills per character), and it buys expressive delivery: stories the listener cares about get read like they matter. Everything else is free, local, and deterministic.
 
 ## How it works
 
@@ -30,11 +32,17 @@ assemble (local, free)              PCM + topic gaps + a quiet ding,
 persist (SQLite + local MP3)        transcript + per-stage timing + cost
 ```
 
-The single LLM call does the editorial work: choose the best stories, order them for pacing, and write the script as an ordered list of segments, each tagged with a `kind` (intro, story, transition, outro), a `speaker`, pure spoken `text`, and an `energy` (calm, warm, high) that tracks how much this listener cares about the topic. Each segment then goes to ElevenLabs as its own call: the energy bends the voice settings (a high-energy story gets lower stability and more style, so it reads livelier), and each call is conditioned on the neighboring segments' text (`previous_text`/`next_text`) so the prosody carries across calls and it stays one continuous host. The PCM comes back raw, gets assembled locally with a beat of air and a quiet ding between topics, and is encoded to MP3 on the machine, which also makes the reported duration exact rather than estimated. Set `NARRATION_MODE=single` to fall back to the original one-call narration.
+The single LLM call does the editorial work: choose the best stories, order them for pacing, and write the script as an ordered list of segments. Each segment carries a `kind` (intro, story, transition, outro), a `speaker`, pure spoken `text`, and an `energy` (calm, warm, high) that tracks how much this listener cares about the topic.
+
+Each segment then goes to ElevenLabs as its own call. The energy bends the voice settings (a high-energy story gets lower stability and more style, so it reads livelier), and each call is conditioned on the neighboring segments' text (`previous_text`/`next_text`) so the prosody carries across calls and it stays one continuous host.
+
+The PCM comes back raw, gets assembled locally with a beat of air and a quiet ding between topics, and is encoded to MP3 on the machine, which also makes the reported duration exact rather than estimated. Set `NARRATION_MODE=single` to fall back to the original one-call narration.
 
 The React app is two pages: a **Studio** for preferences, generation, and playback, and a **Dashboard** showing real run metrics alongside clearly labeled mock product analytics.
 
-The segment contract is host-agnostic on purpose. Single-host is what ships: every segment uses one speaker and one voice. Two-host is the same contract with alternating `host_a` and `host_b` speakers, and the prompt can already write it (there is a sample script at `docs/sample-episode-two-host.md`). The segmented narration engine now does most of the mechanical work two-host would need (per-segment synthesis, stitching, local assembly); what remains unwired is the per-speaker voice routing and loudness-matching two different voices, so two-host stays a documented extension, not a claim. See `solution.md`.
+The segment contract is host-agnostic on purpose. Single-host is what ships: every segment uses one speaker and one voice. Two-host is the same contract with alternating `host_a` and `host_b` speakers, and the prompt can already write it (there is a sample script at `docs/sample-episode-two-host.md`).
+
+The segmented narration engine now does most of the mechanical work two-host would need (per-segment synthesis, conditioning, local assembly). What remains unwired is per-speaker voice routing and loudness-matching two different voices, so two-host stays a documented extension, not a claim. See `solution.md`.
 
 ## Run it locally
 

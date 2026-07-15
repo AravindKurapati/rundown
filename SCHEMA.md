@@ -11,7 +11,7 @@ Singleton table storing application settings (id=1, created on init).
 | tone | str | "sharp, warm, lightly witty" | Narration tone style |
 | target_minutes | int | 5 | Target episode length in minutes |
 | host_mode | str | "single" | Hosting mode; "single" ships, "two" is a documented stretch |
-| voice_a | str | "21m00Tcm4TlvDq8ikWAM" | Primary ElevenLabs voice ID (premade "Rachel") |
+| voice_a | str | TTS_VOICE_A env, default "onwK4e9ZLuTAKqWW03F9" | Primary ElevenLabs voice ID (premade "Daniel") |
 | voice_b | str | "ErXwobaYiN019PkySvjV" | Secondary ElevenLabs voice ID (premade "Antoni") |
 | tts_model | str | "eleven_multilingual_v2" | TTS model identifier |
 | llm_model_script | str | "gpt-5.5" | Model for script generation |
