@@ -1,5 +1,9 @@
 const BASE = "http://localhost:8000/api";
-async function j<T>(r: Response): Promise<T> { if (!r.ok) throw new Error(String(r.status)); return r.json(); }
+async function j<T>(r: Response): Promise<T> {
+  if (r.ok) return r.json();
+  const body = (await r.json().catch(() => null)) as { error?: { message?: string } } | null;
+  throw new Error(body?.error?.message ?? String(r.status));
+}
 export const api = {
   getPreferences: () => fetch(`${BASE}/preferences`).then(j),
   putPreferences: (b: unknown) => fetch(`${BASE}/preferences`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }).then(j),

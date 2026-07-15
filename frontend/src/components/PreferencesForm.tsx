@@ -83,6 +83,7 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
   const [durValue, setDurValue] = useState(5);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     void load();
@@ -141,6 +142,7 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
   async function onSave() {
     if (!prefs) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const body: Preferences = { ...prefs, interests_json: JSON.stringify(topics) };
       await api.putPreferences(body);
@@ -148,6 +150,9 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
       setSchedule(sched);
       setSaved(true);
       onSaved?.();
+    } catch (err) {
+      setSaved(false);
+      setSaveError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -388,6 +393,9 @@ export default function PreferencesForm({ onSaved }: PreferencesFormProps) {
           {saving ? "Saving…" : "Save settings"}
         </button>
         {saved && <span className="text-sm font-semibold text-good">Saved.</span>}
+        {saveError && (
+          <span className="text-sm font-semibold text-air">Save failed: {saveError}</span>
+        )}
       </div>
     </section>
   );
