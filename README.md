@@ -1,6 +1,5 @@
 # Rundown
 
-![ci](https://github.com/AravindKurapati/rundown/actions/workflows/ci.yml/badge.svg)
 
 A personal daily news podcast, generated on your machine, for well under a dollar an episode at the default rates.
 
