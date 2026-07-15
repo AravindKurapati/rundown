@@ -4,7 +4,9 @@ A personal daily news podcast, generated on your machine, for well under a dolla
 
 Tell Rundown what you care about and it produces a five-minute briefing you would actually listen to: it gathers fresh news on your interests, picks the stories worth your time, writes a script with a point of view, and reads it aloud in a good voice.
 
-The idea underneath is restraint. One structured LLM call both selects the stories and writes the full segmented script, and one TTS call per segment renders it, each delivered at the energy the script asks for and conditioned on its neighbors so the voice stays continuous. Splitting narration by segment costs nothing extra (TTS bills per character), and it buys expressive delivery: stories the listener cares about get read like they matter. Everything else is free, local, and deterministic.
+One structured LLM call both selects the stories and writes the full segmented script, and one TTS call per segment renders it, each delivered at the energy the script asks for and conditioned on its neighbors so the voice stays continuous.
+
+Splitting narration by segment costs nothing extra (TTS bills per character), and it buys expressive delivery: stories the listener cares about get read like they matter. Everything else is free, local, and deterministic.
 
 ![The Studio: today's briefing, preferences, and the episode archive](docs/screenshots/studio.png)
 
